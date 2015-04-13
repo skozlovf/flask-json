@@ -7,7 +7,8 @@ python:
 env:
   - FLASK=0.10
   - FLASK=0.10.1
+  - WITHSPEAKLATER=
+  - WITHSPEAKLATER=speaklater
 install:
-  - pip install Flask==$FLASK
-  - pip install speaklater
+  - pip install Flask==$FLASK $WITHSPEAKLATER
 script: nosetests test_json
