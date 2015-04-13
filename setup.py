@@ -13,7 +13,6 @@ with read('flask_json.py', only_open=True) as f:
     for line in f:
         if line.startswith('__version__'):
             ext_version,  = re.findall(r"__version__\W*=\W*'([^']+)'", line)
-            print ext_version
             break
 
 
