@@ -130,11 +130,6 @@ def test_decorators_initialized():
 class TestLogic(object):
     def setup(self):
         self.app = Flask(__name__)
-
-        # Flask < 0.10 has no get_json().
-        if not hasattr(self.app.request_class, 'get_json'):
-            self.app.request_class.get_json = lambda x: x.json
-
         self.app.config['TESTING'] = True
         self.ext = FlaskJSON(self.app)
         self.client = self.ext._app.test_client()
