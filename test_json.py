@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, date, time, tzinfo, timedelta
-from speaklater import make_lazy_string
+try:
+    from speaklater import make_lazy_string
+except ImportError:
+    make_lazy_string = None
 from flask import Flask, request, json
+import flask_json
 from flask_json import (
     json_response,
     FlaskJSON,
@@ -234,6 +238,38 @@ class TestLogic(object):
         else:
             assert_equals(r.data, 'Some info')
 
+    # Test encoding lazy string.
+    def test_encoder_lazy(self):
+        # Do nothing if speaklater is not installed.
+        if make_lazy_string is None:
+            return
+
+        @self.app.route('/test')
+        def endpoint():
+            txt = u'Привет'
+            return json_response(text=make_lazy_string(lambda: txt))
+
+        r = self.client.get('/test')
+        assert_equals(r.status_code, 200)
+        data = json.loads(r.data)
+        assert_equals(data['text'], u'Привет')
+
+    # Test encoding if speaklater is not installed.
+    # Here we just check if JSONEncoderEx.default() runs without errors.
+    def test_encoder_nospeaklater(self):
+        @self.app.route('/test')
+        def endpoint():
+            return json_response(text=time())  # this calls our encoder.
+
+        # Let's pretend we have no speaklater imported
+        # to test behaviour without speaklater even if it installed.
+        flask_json._LazyString = None
+
+        r = self.client.get('/test')
+        assert_equals(r.status_code, 200)
+        data = json.loads(r.data)
+        assert_equals(data['text'], '00:00:00')
+
     # Test response JSON encoder for datetime, date and time values.
     def test_encoder_datetime(self):
         class GMT1(tzinfo):
@@ -271,18 +307,6 @@ class TestLogic(object):
         assert_equals(data['dt'], '2015.12.07')
         assert_equals(data['dtm'], '2014/05/12 17-24-10')
 
-    # Test encoding lazy string.
-    def test_encoder_lazy(self):
-        @self.app.route('/test')
-        def endpoint():
-            txt = u'Привет'
-            return json_response(text=make_lazy_string(lambda: txt))
-
-        r = self.client.get('/test')
-        assert_equals(r.status_code, 200)
-        data = json.loads(r.data)
-        assert_equals(data['text'], u'Привет')
-
     # Test response JSON encoder with custom encoding.
     def test_encoder_hook(self):
         class Fake(object):
@@ -305,6 +329,22 @@ class TestLogic(object):
         assert_equals(data['fake'], 'fake-42')
         assert_equals(data['tm'], '12:34:56')
         assert_equals(data['txt'], 'txt')
+
+    # Check if JSONEncoderEx calles original default() method.
+    # In such situation exception will be raised (not serializable).
+    def test_encoder_invalid(self):
+        @self.app.route('/test')
+        def endpoint():
+            try:
+                json_response(fake=object())
+            except TypeError:
+                return json_response(fake=42)
+            return json_response(fake=1)
+
+        r = self.client.get('/test')
+        assert_equals(r.status_code, 200)
+        data = json.loads(r.data)
+        assert_equals(data['fake'], 42)
 
     # Test JsonRequest on invalid input JSON.
     def test_decoder_error(self):

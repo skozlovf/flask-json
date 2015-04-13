@@ -9,7 +9,10 @@
 """
 import sys
 from datetime import datetime, date, time
-from speaklater import _LazyString
+try:
+    from speaklater import _LazyString
+except ImportError:
+    _LazyString = None
 from flask import current_app, jsonify, Request
 from flask import json
 try:
@@ -112,7 +115,7 @@ class JSONEncoderEx(json.JSONEncoder):
         configurations.
     """
     def default(self, o):
-        if isinstance(o, _LazyString):
+        if _LazyString is not None and isinstance(o, _LazyString):
             return text_type(o)
         elif isinstance(o, datetime):
             fmt = current_app.config.get('JSON_DATETIME_FORMAT')
