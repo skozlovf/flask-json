@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, date, time, tzinfo, timedelta
 from speaklater import make_lazy_string
-from flask import Flask, Request, request, json
+from flask import Flask, request, json
 from flask_json import (
     json_response,
     FlaskJSON,
@@ -321,7 +321,13 @@ class TestLogic(object):
         # Custom error message.
         self.app.config['JSON_DECODE_ERROR_MESSAGE'] = 'WTF?'
         r = self.post_json('/test', data='bla', raw=True)
-        assert_dict_equal(json.loads(r.data), dict(status=400, description='WTF?'))
+        assert_dict_equal(json.loads(r.data),
+                          dict(status=400, description='WTF?'))
+
+        # Empty error message.
+        self.app.config['JSON_DECODE_ERROR_MESSAGE'] = None
+        r = self.post_json('/test', data='bla', raw=True)
+        assert_dict_equal(json.loads(r.data), dict(status=400))
 
         # Custom decoder error handler - just return predefined dict instead of
         # raising an error.
