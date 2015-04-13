@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import unittest
 from datetime import datetime, date, time, tzinfo, timedelta
 from speaklater import make_lazy_string
 from flask import Flask, request
@@ -11,96 +10,126 @@ from flask_json import (
     JsonRequest,
     JsonErrorResponse
 )
+from nose.tools import assert_equals
+
+# To support python 2.6 tests we have to add few missing functions.
+import sys
+if sys.version_info < (2, 7):
+    def assert_is(a, b):
+        assert a is b
+
+    def assert_is_not(a, b):
+        assert a is not b
+
+    def assert_is_none(a):
+        assert a is None
+
+    def assert_is_not_none(a):
+        assert a is not None
+
+    def assert_dict_equal(a, b):
+        diff = set(a.iteritems()) - set(b.iteritems())
+        assert not diff, 'dics are different'
+else:
+    from nose.tools import (
+        assert_is,
+        assert_is_not,
+        assert_is_none,
+        assert_is_not_none,
+        assert_dict_equal
+    )
 
 
-class InitTest(unittest.TestCase):
-    """Initialization tests."""
+# -- Initialization tests ------------------------------------------------------
 
-    # Check initial state on create.
-    def test_create(self):
-        ext = FlaskJSON()
-        self.assertIsNone(ext._app)
-        self.assertIsNone(ext._error_handler_func)
-        self.assertIsNone(ext._decoder_error_func)
-        self.assertIs(ext._encoder_class, JSONEncoderEx)
-
-    # Check initial config on init with constructor.
-    def test_init_constructor(self):
-        app = Flask(__name__)
-        ext = FlaskJSON(app)
-
-        self.assertEqual(app.config.get('JSON_ADD_STATUS'), True)
-        self.assertIsNone(app.config.get('JSON_DATE_FORMAT'))
-        self.assertIsNone(app.config.get('JSON_TIME_FORMAT'))
-        self.assertIsNone(app.config.get('JSON_DATETIME_FORMAT'))
-        self.assertEqual(app.config.get('JSON_DECODE_ERROR_MESSAGE'),
-                         'Not a JSON.')
-        self.assertIs(app.request_class, JsonRequest)
-        self.assertIs(app.json_encoder, JSONEncoderEx)
-        self.assertEqual(app.extensions['json'], ext)
-
-    # Check initial config on deferred init.
-    def test_init(self):
-        app = Flask(__name__)
-        ext = FlaskJSON()
-        ext.init_app(app)
-
-        self.assertEqual(app.config.get('JSON_ADD_STATUS'), True)
-        self.assertIsNone(app.config.get('JSON_DATE_FORMAT'))
-        self.assertIsNone(app.config.get('JSON_TIME_FORMAT'))
-        self.assertIsNone(app.config.get('JSON_DATETIME_FORMAT'))
-        self.assertEqual(app.config.get('JSON_DECODE_ERROR_MESSAGE'),
-                         'Not a JSON.')
-        self.assertIs(app.request_class, JsonRequest)
-        self.assertIs(app.json_encoder, JSONEncoderEx)
-        self.assertEqual(app.extensions['json'], ext)
-
-    # Check decorators for uninitialized extension.
-    def test_decorators(self):
-        app = Flask(__name__)
-        ext = FlaskJSON()
-
-        @ext.error_handler
-        def err_handler_func():
-            pass
-
-        @ext.decoder_error
-        def decoder_func():
-            pass
-
-        @ext.encoder
-        def encoder_func():
-            pass
-
-        self.assertEquals(ext._error_handler_func, err_handler_func)
-        self.assertEquals(ext._decoder_error_func, decoder_func)
-
-        # If FlaskJSON is not initialized with the app then only
-        # '_encoder_class' will be set.
-        self.assertIsNotNone(ext._encoder_class)
-        self.assertIsNot(app.json_encoder, ext._encoder_class)
-
-        # And after initialization we set our json encoder.
-        ext.init_app(app)
-        self.assertIs(app.json_encoder, ext._encoder_class)
-
-    # Check decorators for initialized extension.
-    def test_decorators_initialized(self):
-        app = Flask(__name__)
-        ext = FlaskJSON(app)
-
-        @ext.decoder_error
-        def decoder_func():
-            pass
-
-        # If we apply decorator on initialized extension then it sets
-        # encoder class immediately.
-        self.assertIs(app.json_encoder, ext._encoder_class)
+# Check initial state on create.
+def test_create():
+    ext = FlaskJSON()
+    assert_is_none(ext._app)
+    assert_is_none(ext._error_handler_func)
+    assert_is_none(ext._decoder_error_func)
+    assert_is(ext._encoder_class, JSONEncoderEx)
 
 
-class FlaskJsonTest(unittest.TestCase):
-    """Logic tests."""
-    def setUp(self):
+# Check initial config on init with constructor.
+def test_init_constructor():
+    app = Flask(__name__)
+    ext = FlaskJSON(app)
+
+    assert_equals(app.config.get('JSON_ADD_STATUS'), True)
+    assert_is_none(app.config.get('JSON_DATE_FORMAT'))
+    assert_is_none(app.config.get('JSON_TIME_FORMAT'))
+    assert_is_none(app.config.get('JSON_DATETIME_FORMAT'))
+    assert_equals(app.config.get('JSON_DECODE_ERROR_MESSAGE'), 'Not a JSON.')
+    assert_is(app.request_class, JsonRequest)
+    assert_is(app.json_encoder, JSONEncoderEx)
+    assert_equals(app.extensions['json'], ext)
+
+
+# Check initial config on deferred init.
+def test_init():
+    app = Flask(__name__)
+    ext = FlaskJSON()
+    ext.init_app(app)
+
+    assert_equals(app.config.get('JSON_ADD_STATUS'), True)
+    assert_is_none(app.config.get('JSON_DATE_FORMAT'))
+    assert_is_none(app.config.get('JSON_TIME_FORMAT'))
+    assert_is_none(app.config.get('JSON_DATETIME_FORMAT'))
+    assert_equals(app.config.get('JSON_DECODE_ERROR_MESSAGE'), 'Not a JSON.')
+    assert_is(app.request_class, JsonRequest)
+    assert_is(app.json_encoder, JSONEncoderEx)
+    assert_equals(app.extensions['json'], ext)
+
+
+# Check decorators for uninitialized extension.
+def test_decorators():
+    app = Flask(__name__)
+    ext = FlaskJSON()
+
+    @ext.error_handler
+    def err_handler_func():
+        pass
+
+    @ext.decoder_error
+    def decoder_func():
+        pass
+
+    @ext.encoder
+    def encoder_func():
+        pass
+
+    assert_equals(ext._error_handler_func, err_handler_func)
+    assert_equals(ext._decoder_error_func, decoder_func)
+
+    # If FlaskJSON is not initialized with the app then only
+    # '_encoder_class' will be set.
+    assert_is_not_none(ext._encoder_class)
+    assert_is_not(app.json_encoder, ext._encoder_class)
+
+    # And after initialization we set our json encoder.
+    ext.init_app(app)
+    assert_is(app.json_encoder, ext._encoder_class)
+
+
+# Check decorators for initialized extension.
+def test_decorators_initialized():
+    app = Flask(__name__)
+    ext = FlaskJSON(app)
+
+    @ext.decoder_error
+    def decoder_func():
+        pass
+
+    # If we apply decorator on initialized extension then it sets
+    # encoder class immediately.
+    assert_is(app.json_encoder, ext._encoder_class)
+
+
+# -- Logic tests ---------------------------------------------------------------
+
+class TestLogic(object):
+    def setup(self):
         self.app = Flask(__name__)
         self.app.config['TESTING'] = True
         self.ext = FlaskJSON(self.app)
@@ -109,8 +138,10 @@ class FlaskJsonTest(unittest.TestCase):
     # Helper method to send JSON POST requests.
     def post_json(self, url, data, raw=False):
         content = data if raw else dumps(data)
-        headers = [('Content-Type', 'application/json'),
-                   ('Content-Length', len(content))]
+        headers = [
+            ('Content-Type', 'application/json'),
+            ('Content-Length', len(content))
+        ]
         return self.client.post(url, headers=headers, data=content)
 
     # Check if JSON request is works.
@@ -121,8 +152,8 @@ class FlaskJsonTest(unittest.TestCase):
             return json_response(**data)
 
         r = self.post_json('/test', dict(some=42))
-        self.assertEqual(r.status_code, 200)
-        self.assertDictEqual(loads(r.data), dict(status=200, some=42))
+        assert_equals(r.status_code, 200)
+        assert_dict_equal(loads(r.data), dict(status=200, some=42))
 
     # Test json_response().
     def test_json_response(self):
@@ -130,23 +161,23 @@ class FlaskJsonTest(unittest.TestCase):
         self.ctx.push()
 
         r = json_response()
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.mimetype, 'application/json')
+        assert_equals(r.status_code, 200)
+        assert_equals(r.mimetype, 'application/json')
 
         r = json_response(status=400)
-        self.assertEqual(r.status_code, 400)
+        assert_equals(r.status_code, 400)
 
         # Response will contains status by default.
         r = json_response(some='val', data=42)
-        self.assertEqual(r.status_code, 200)
+        assert_equals(r.status_code, 200)
         json = loads(r.data)
-        self.assertDictEqual(json, {'status': 200, 'some': 'val', 'data': 42})
+        assert_dict_equal(json, {'status': 200, 'some': 'val', 'data': 42})
 
         # Disable status in response
         self.app.config['JSON_ADD_STATUS'] = False
         r = json_response(some='val', data=42)
         json = loads(r.data)
-        self.assertDictEqual(json, {'some': 'val', 'data': 42})
+        assert_dict_equal(json, {'some': 'val', 'data': 42})
 
         self.ctx.pop()
 
@@ -157,15 +188,15 @@ class FlaskJsonTest(unittest.TestCase):
             raise JsonErrorResponse
 
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 400)
+        assert_equals(r.status_code, 400)
         json = loads(r.data)
-        self.assertDictEqual(json, {'status': 400})
+        assert_dict_equal(json, {'status': 400})
 
         self.app.config['JSON_ADD_STATUS'] = False
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 400)
+        assert_equals(r.status_code, 400)
         json = loads(r.data)
-        self.assertDictEqual(json, {})
+        assert_dict_equal(json, {})
 
     # Test JsonErrorResponse with data.
     def test_json_error_with_data(self):
@@ -174,15 +205,15 @@ class FlaskJsonTest(unittest.TestCase):
             raise JsonErrorResponse(info='Some info')
 
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 400)
+        assert_equals(r.status_code, 400)
         json = loads(r.data)
-        self.assertDictEqual(json, {'status': 400, 'info': 'Some info'})
+        assert_dict_equal(json, {'status': 400, 'info': 'Some info'})
 
         self.app.config['JSON_ADD_STATUS'] = False
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 400)
+        assert_equals(r.status_code, 400)
         json = loads(r.data)
-        self.assertDictEqual(json, {'info': 'Some info'})
+        assert_dict_equal(json, {'info': 'Some info'})
 
     # Test JsonErrorResponse handler.
     def test_json_error_handler(self):
@@ -196,8 +227,13 @@ class FlaskJsonTest(unittest.TestCase):
             return e.data['info']
 
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.data, 'Some info')
+        assert_equals(r.status_code, 200)
+        # On python 3 Response.data is a byte object, so to compare we have to
+        # convert it to unicode.
+        if sys.version_info > (2, 7):
+            assert_equals(r.data.decode('utf-8'), 'Some info')
+        else:
+            assert_equals(r.data, 'Some info')
 
     # Test response JSON encoder for datetime, date and time values.
     def test_encoder_datetime(self):
@@ -212,17 +248,16 @@ class FlaskJsonTest(unittest.TestCase):
         def endpoint():
             dtm = datetime(2014, 5, 12, 17, 24, 10, tzinfo=GMT1())
             return json_response(tm1=time(12, 34, 56), tm2=time(1, 2, 3, 175),
-                                 dt=date(2015, 12, 7),
-                                 dtm=dtm)
+                                 dt=date(2015, 12, 7), dtm=dtm)
 
         # By default ISO format is used.
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 200)
+        assert_equals(r.status_code, 200)
         json = loads(r.data)
-        self.assertEqual(json['tm1'], '12:34:56')
-        self.assertEqual(json['tm2'], '01:02:03.000175')
-        self.assertEqual(json['dt'], '2015-12-07')
-        self.assertEqual(json['dtm'], '2014-05-12T17:24:10+01:00')
+        assert_equals(json['tm1'], '12:34:56')
+        assert_equals(json['tm2'], '01:02:03.000175')
+        assert_equals(json['dt'], '2015-12-07')
+        assert_equals(json['dtm'], '2014-05-12T17:24:10+01:00')
 
         # Custom formats.
         self.app.config['JSON_TIME_FORMAT'] = '%M:%S:%H'
@@ -230,12 +265,12 @@ class FlaskJsonTest(unittest.TestCase):
         self.app.config['JSON_DATETIME_FORMAT'] = '%Y/%m/%d %H-%M-%S'
 
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 200)
+        assert_equals(r.status_code, 200)
         json = loads(r.data)
-        self.assertEqual(json['tm1'], '34:56:12')
-        self.assertEqual(json['tm2'], '02:03:01')
-        self.assertEqual(json['dt'], '2015.12.07')
-        self.assertEqual(json['dtm'], '2014/05/12 17-24-10')
+        assert_equals(json['tm1'], '34:56:12')
+        assert_equals(json['tm2'], '02:03:01')
+        assert_equals(json['dt'], '2015.12.07')
+        assert_equals(json['dtm'], '2014/05/12 17-24-10')
 
     # Test encoding lazy string.
     def test_encoder_lazy(self):
@@ -245,9 +280,9 @@ class FlaskJsonTest(unittest.TestCase):
             return json_response(text=make_lazy_string(lambda: txt))
 
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 200)
+        assert_equals(r.status_code, 200)
         json = loads(r.data)
-        self.assertEqual(json['text'], u'Привет')
+        assert_equals(json['text'], u'Привет')
 
     # Test response JSON encoder with custom encoding.
     def test_encoder_hook(self):
@@ -263,14 +298,14 @@ class FlaskJsonTest(unittest.TestCase):
         def endpoint():
             fake = Fake()
             fake.data = 42
-            return json_response(fake=fake, tm=time(12, 34, 56), lst=[1, 2])
+            return json_response(fake=fake, tm=time(12, 34, 56), txt='txt')
 
         r = self.client.get('/test')
-        self.assertEqual(r.status_code, 200)
+        assert_equals(r.status_code, 200)
         json = loads(r.data)
-        self.assertEqual(json['fake'], 'fake-42')
-        self.assertEqual(json['tm'], '12:34:56')
-        self.assertListEqual(json['lst'], [1, 2])
+        assert_equals(json['fake'], 'fake-42')
+        assert_equals(json['tm'], '12:34:56')
+        assert_equals(json['txt'], 'txt')
 
     # Test JsonRequest on invalid input JSON.
     def test_decoder_error(self):
@@ -280,15 +315,14 @@ class FlaskJsonTest(unittest.TestCase):
             return json_response(**json)
 
         r = self.post_json('/test', data='bla', raw=True)
-        self.assertEqual(r.status_code, 400)
-        self.assertDictEqual(loads(r.data),
-                             dict(status=400, description='Not a JSON.'))
+        assert_equals(r.status_code, 400)
+        assert_dict_equal(loads(r.data),
+                          dict(status=400, description='Not a JSON.'))
 
         # Custom error message.
         self.app.config['JSON_DECODE_ERROR_MESSAGE'] = 'WTF?'
         r = self.post_json('/test', data='bla', raw=True)
-        self.assertDictEqual(loads(r.data),
-                             dict(status=400, description='WTF?'))
+        assert_dict_equal(loads(r.data), dict(status=400, description='WTF?'))
 
         # Custom decoder error handler - just return predefined dict instead of
         # raising an error.
@@ -297,8 +331,4 @@ class FlaskJsonTest(unittest.TestCase):
             return dict(text='hello')
 
         r = self.post_json('/test', data='bla', raw=True)
-        self.assertDictEqual(loads(r.data), dict(status=200, text='hello'))
-
-
-if __name__ == '__main__':
-    unittest.main()
+        assert_dict_equal(loads(r.data), dict(status=200, text='hello'))
