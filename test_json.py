@@ -210,7 +210,7 @@ class FlaskJsonTest(unittest.TestCase):
 
         @self.app.route('/test')
         def endpoint():
-            dtm = datetime(2014, 05, 12, 17, 24, 10, tzinfo=GMT1())
+            dtm = datetime(2014, 5, 12, 17, 24, 10, tzinfo=GMT1())
             return json_response(tm1=time(12, 34, 56), tm2=time(1, 2, 3, 175),
                                  dt=date(2015, 12, 7),
                                  dtm=dtm)
