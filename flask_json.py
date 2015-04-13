@@ -11,7 +11,7 @@ import sys
 from datetime import datetime, date, time
 from speaklater import _LazyString
 from flask import current_app, jsonify, Request
-from flask.json import JSONEncoder
+from flask import json
 try:
     from flask import _app_ctx_stack as stack
 except ImportError:
@@ -101,7 +101,7 @@ class JsonRequest(Request):
                 raise JsonErrorResponse()
 
 
-class JSONEncoderEx(JSONEncoder):
+class JSONEncoderEx(json.JSONEncoder):
     """Extends default Flask JSON encoder with more types:
     date, time and bablel strings. Also overrides datetime encoding.
 
@@ -123,7 +123,7 @@ class JSONEncoderEx(JSONEncoder):
         elif isinstance(o, time):
             fmt = current_app.config.get('JSON_TIME_FORMAT')
             return o.isoformat() if fmt is None else o.strftime(fmt)
-        return JSONEncoder.default(self, o)
+        return super(JSONEncoderEx, self).default(o)
 
 
 class FlaskJSON(object):
