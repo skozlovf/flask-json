@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, date, time, tzinfo, timedelta
 from speaklater import make_lazy_string
-from flask import Flask, request
-from flask.json import loads, dumps
+from flask import Flask, request, json
 from flask_json import (
     json_response,
     FlaskJSON,
@@ -29,7 +28,7 @@ if sys.version_info < (2, 7):
 
     def assert_dict_equal(a, b):
         diff = set(a.iteritems()) - set(b.iteritems())
-        assert not diff, 'dics are different'
+        assert not diff, 'dicts are different'
 else:
     from nose.tools import (
         assert_is,
@@ -137,7 +136,7 @@ class TestLogic(object):
 
     # Helper method to send JSON POST requests.
     def post_json(self, url, data, raw=False):
-        content = data if raw else dumps(data)
+        content = data if raw else json.dumps(data)
         headers = [
             ('Content-Type', 'application/json'),
             ('Content-Length', len(content))
@@ -153,7 +152,7 @@ class TestLogic(object):
 
         r = self.post_json('/test', dict(some=42))
         assert_equals(r.status_code, 200)
-        assert_dict_equal(loads(r.data), dict(status=200, some=42))
+        assert_dict_equal(json.loads(r.data), dict(status=200, some=42))
 
     # Test json_response().
     def test_json_response(self):
@@ -170,14 +169,14 @@ class TestLogic(object):
         # Response will contains status by default.
         r = json_response(some='val', data=42)
         assert_equals(r.status_code, 200)
-        json = loads(r.data)
-        assert_dict_equal(json, {'status': 200, 'some': 'val', 'data': 42})
+        data = json.loads(r.data)
+        assert_dict_equal(data, {'status': 200, 'some': 'val', 'data': 42})
 
         # Disable status in response
         self.app.config['JSON_ADD_STATUS'] = False
         r = json_response(some='val', data=42)
-        json = loads(r.data)
-        assert_dict_equal(json, {'some': 'val', 'data': 42})
+        data = json.loads(r.data)
+        assert_dict_equal(data, {'some': 'val', 'data': 42})
 
         self.ctx.pop()
 
@@ -189,14 +188,14 @@ class TestLogic(object):
 
         r = self.client.get('/test')
         assert_equals(r.status_code, 400)
-        json = loads(r.data)
-        assert_dict_equal(json, {'status': 400})
+        data = json.loads(r.data)
+        assert_dict_equal(data, {'status': 400})
 
         self.app.config['JSON_ADD_STATUS'] = False
         r = self.client.get('/test')
         assert_equals(r.status_code, 400)
-        json = loads(r.data)
-        assert_dict_equal(json, {})
+        data = json.loads(r.data)
+        assert_dict_equal(data, {})
 
     # Test JsonErrorResponse with data.
     def test_json_error_with_data(self):
@@ -206,14 +205,14 @@ class TestLogic(object):
 
         r = self.client.get('/test')
         assert_equals(r.status_code, 400)
-        json = loads(r.data)
-        assert_dict_equal(json, {'status': 400, 'info': 'Some info'})
+        data = json.loads(r.data)
+        assert_dict_equal(data, {'status': 400, 'info': 'Some info'})
 
         self.app.config['JSON_ADD_STATUS'] = False
         r = self.client.get('/test')
         assert_equals(r.status_code, 400)
-        json = loads(r.data)
-        assert_dict_equal(json, {'info': 'Some info'})
+        data = json.loads(r.data)
+        assert_dict_equal(data, {'info': 'Some info'})
 
     # Test JsonErrorResponse handler.
     def test_json_error_handler(self):
@@ -253,11 +252,11 @@ class TestLogic(object):
         # By default ISO format is used.
         r = self.client.get('/test')
         assert_equals(r.status_code, 200)
-        json = loads(r.data)
-        assert_equals(json['tm1'], '12:34:56')
-        assert_equals(json['tm2'], '01:02:03.000175')
-        assert_equals(json['dt'], '2015-12-07')
-        assert_equals(json['dtm'], '2014-05-12T17:24:10+01:00')
+        data = json.loads(r.data)
+        assert_equals(data['tm1'], '12:34:56')
+        assert_equals(data['tm2'], '01:02:03.000175')
+        assert_equals(data['dt'], '2015-12-07')
+        assert_equals(data['dtm'], '2014-05-12T17:24:10+01:00')
 
         # Custom formats.
         self.app.config['JSON_TIME_FORMAT'] = '%M:%S:%H'
@@ -266,11 +265,11 @@ class TestLogic(object):
 
         r = self.client.get('/test')
         assert_equals(r.status_code, 200)
-        json = loads(r.data)
-        assert_equals(json['tm1'], '34:56:12')
-        assert_equals(json['tm2'], '02:03:01')
-        assert_equals(json['dt'], '2015.12.07')
-        assert_equals(json['dtm'], '2014/05/12 17-24-10')
+        data = json.loads(r.data)
+        assert_equals(data['tm1'], '34:56:12')
+        assert_equals(data['tm2'], '02:03:01')
+        assert_equals(data['dt'], '2015.12.07')
+        assert_equals(data['dtm'], '2014/05/12 17-24-10')
 
     # Test encoding lazy string.
     def test_encoder_lazy(self):
@@ -281,8 +280,8 @@ class TestLogic(object):
 
         r = self.client.get('/test')
         assert_equals(r.status_code, 200)
-        json = loads(r.data)
-        assert_equals(json['text'], u'Привет')
+        data = json.loads(r.data)
+        assert_equals(data['text'], u'Привет')
 
     # Test response JSON encoder with custom encoding.
     def test_encoder_hook(self):
@@ -302,27 +301,27 @@ class TestLogic(object):
 
         r = self.client.get('/test')
         assert_equals(r.status_code, 200)
-        json = loads(r.data)
-        assert_equals(json['fake'], 'fake-42')
-        assert_equals(json['tm'], '12:34:56')
-        assert_equals(json['txt'], 'txt')
+        data = json.loads(r.data)
+        assert_equals(data['fake'], 'fake-42')
+        assert_equals(data['tm'], '12:34:56')
+        assert_equals(data['txt'], 'txt')
 
     # Test JsonRequest on invalid input JSON.
     def test_decoder_error(self):
         @self.app.route('/test', methods=['POST'])
         def endpoint():
-            json = request.get_json()
-            return json_response(**json)
+            data = request.get_json()
+            return json_response(**data)
 
         r = self.post_json('/test', data='bla', raw=True)
         assert_equals(r.status_code, 400)
-        assert_dict_equal(loads(r.data),
+        assert_dict_equal(json.loads(r.data),
                           dict(status=400, description='Not a JSON.'))
 
         # Custom error message.
         self.app.config['JSON_DECODE_ERROR_MESSAGE'] = 'WTF?'
         r = self.post_json('/test', data='bla', raw=True)
-        assert_dict_equal(loads(r.data), dict(status=400, description='WTF?'))
+        assert_dict_equal(json.loads(r.data), dict(status=400, description='WTF?'))
 
         # Custom decoder error handler - just return predefined dict instead of
         # raising an error.
@@ -331,4 +330,4 @@ class TestLogic(object):
             return dict(text='hello')
 
         r = self.post_json('/test', data='bla', raw=True)
-        assert_dict_equal(loads(r.data), dict(status=200, text='hello'))
+        assert_dict_equal(json.loads(r.data), dict(status=200, text='hello'))
