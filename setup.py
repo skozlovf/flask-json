@@ -29,7 +29,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
-    install_requires=['Flask', 'speaklater', 'six'],
+    install_requires=['Flask', 'speaklater'],
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',

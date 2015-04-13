@@ -7,8 +7,8 @@
     :copyright: (c) 2015 by Sergey Kozlov
     :license: BSD, see LICENSE for more details.
 """
+import sys
 from datetime import datetime, date, time
-from six import text_type
 from speaklater import _LazyString
 from flask import current_app, jsonify, Request
 from flask.json import JSONEncoder
@@ -18,6 +18,8 @@ except ImportError:
     from flask import _request_ctx_stack as stack
 
 __version__ = '0.0.1'
+
+text_type = unicode if sys.version_info[0] == 2 else str
 
 
 def json_response(status=200, **kwargs):
