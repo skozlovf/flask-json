@@ -123,7 +123,7 @@ You can configure Flask-JSON with the following options:
 
 ``JSON_TIME_FORMAT``            .. _opt_fmt_time:
 
-                                Format for the :class:`datetime.time` values
+                                Format for the :class:`~datetime.time` values
                                 in JSON response.
 
                                 Default is ISO 8601: ``HH-MM-SS``.
