@@ -170,6 +170,35 @@ class FlaskJSON(object):
         self._error_handler_func = func
         return func
 
+    def invalid_json_error(self, func):
+        """This decorator allows to set custom handler for the invalid
+        JSON requests.
+
+        It will be called by the
+        :meth:`request.get_json() <flask.Request.get_json>`.
+
+        If the handler returns or raises nothing then Flask-JSON
+        raises :class:`.JsonErrorResponse`.
+
+        Example::
+
+            json = FlaskJson(app)
+            ...
+
+            @json.encoder
+            def invalid_json_error(e):
+                raise SomeException
+
+        By default JSON response will be generated with HTTP 400::
+
+            {"status": 400, "description": "Not a JSON."}
+
+        .. seealso::
+            :ref:`JSON_DECODE_ERROR_MESSAGE <opt_decode_error_msg>`
+        """
+        self._decoder_error_func = func
+        return func
+
     def encoder(self, func):
         """This decorator allows to add extra
         """
@@ -183,8 +212,4 @@ class FlaskJSON(object):
             self._app.json_encoder = JSONEncoderWithHook
         else:
             self._encoder_class = JSONEncoderWithHook
-        return func
-
-    def decoder_error(self, func):
-        self._decoder_error_func = func
         return func

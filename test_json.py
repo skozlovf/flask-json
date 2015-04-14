@@ -94,7 +94,7 @@ def test_decorators():
     def err_handler_func():
         pass
 
-    @ext.decoder_error
+    @ext.invalid_json_error
     def decoder_func():
         pass
 
@@ -120,7 +120,7 @@ def test_decorators_initialized():
     app = Flask(__name__)
     ext = FlaskJSON(app)
 
-    @ext.decoder_error
+    @ext.invalid_json_error
     def decoder_func():
         pass
 
@@ -371,9 +371,18 @@ class TestLogic(object):
 
         # Custom decoder error handler - just return predefined dict instead of
         # raising an error.
-        @self.ext.decoder_error
+        @self.ext.invalid_json_error
         def handler(e):
             return dict(text='hello')
 
         r = self.post_json('/test', data='bla', raw=True)
         assert_dict_equal(json.loads(r.data), dict(status=200, text='hello'))
+
+        # Decoder with no action (nothing is raised or returned) - go back to
+        # default behaviour.
+        @self.ext.invalid_json_error
+        def handler2(e):
+            pass
+
+        r = self.post_json('/test', data='bla', raw=True)
+        assert_dict_equal(json.loads(r.data), dict(status=400))
