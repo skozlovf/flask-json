@@ -31,9 +31,8 @@ Usage
 
 Next example illustrates basic features:
 
-.. literalinclude:: ../examples/app1.py
+.. literalinclude:: ../examples/example2.py
    :language: python
-   :linenos:
 
 Example requests::
 
@@ -49,13 +48,10 @@ Example requests::
     $ curl -X POST --data '{"value": 41}' http://localhost:5000/increment_value
     {"status": 200, "value": 42}
 
-More advanced example:
+In more advanced example we change configuration and set custom error handler:
 
-Here we change configuration and set custom error handler.
-
-.. literalinclude:: ../examples/app2.py
+.. literalinclude:: ../examples/example3.py
    :language: python
-   :linenos:
    :lines: 1-15
    :append: # ... the rest is the same as before ...
 
