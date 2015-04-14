@@ -100,9 +100,9 @@ class JsonRequest(Request):
 
 class JSONEncoderEx(json.JSONEncoder):
     """Extends default Flask JSON encoder with more types:
-    :class:`date`, :class:`time` and
+    :class:`~datetime.date`, :class:`~datetime.time` and
     `speaklater <https://pypi.python.org/pypi/speaklater>`_ lazy strings.
-    Also overrides :class:`datetime` encoding.
+    Also overrides :class:`~datetime.datetime` encoding.
 
     Time related values will be converted to ISO 8601 format by default.
 
@@ -203,6 +203,9 @@ class FlaskJSON(object):
         By default JSON response will be generated with HTTP 400::
 
             {"status": 400, "description": "Not a JSON."}
+
+        You also may return a value from the handler then it will be used as
+        :meth:`request.get_json() <flask.Request.get_json>` result on errors.
 
         .. seealso::
             :ref:`JSON_DECODE_ERROR_MESSAGE <opt_decode_error_msg>`
