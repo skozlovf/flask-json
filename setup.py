@@ -31,6 +31,7 @@ setup(
     platforms='any',
     install_requires=['Flask>=0.10'],
     classifiers=[
+        'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
