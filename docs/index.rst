@@ -69,6 +69,10 @@ Now responses looks like that::
     $ curl -X POST --data '{"value": 41}' http://localhost:5000/increment_value
     {"value": 42}
 
+Examples are available on
+`GitHub <https://github.com/skozlovf/flask-json/tree/master/examples>`_.
+
+
 Configuration
 -------------
 
