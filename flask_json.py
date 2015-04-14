@@ -87,17 +87,18 @@ class JsonRequest(Request):
         # Try decoder error hook firstly; see FlaskJSON.decoder_error().
         func = current_app.extensions['json']._decoder_error_func
         if func is not None:
-            return func(e)
+            response = func(e)
+            if response is not None:
+                return response
 
         # By defualt we raise json error with description.
         # If there is no description config or it's text is empty then
         # raise without a description.
+        desc = current_app.config.get('JSON_DECODE_ERROR_MESSAGE')
+        if desc:
+            raise JsonErrorResponse(description=desc)
         else:
-            desc = current_app.config.get('JSON_DECODE_ERROR_MESSAGE')
-            if desc:
-                raise JsonErrorResponse(description=desc)
-            else:
-                raise JsonErrorResponse()
+            raise JsonErrorResponse()
 
 
 class JSONEncoderEx(json.JSONEncoder):
