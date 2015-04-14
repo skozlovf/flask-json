@@ -15,10 +15,6 @@ except ImportError:
     _LazyString = None
 from flask import current_app, jsonify, Request
 from flask import json
-try:
-    from flask import _app_ctx_stack as stack
-except ImportError:
-    from flask import _request_ctx_stack as stack
 
 __version__ = '0.0.1'
 
