@@ -36,9 +36,12 @@ def json_response(status=200, **kwargs):
         json_response(test=12)
         # {"test": 12}
 
-    :param status: HTTP response status code.
-    :param kwargs: keyword arguments to put in result JSON.
-    :return: :class:`~flask.Response` with the JSON content.
+    Args:
+        status: HTTP response status code.
+        kwargs: keyword arguments to put in result JSON.
+
+    Returns:
+        flask.Response: Response with the JSON content.
     """
     if current_app.config['JSON_ADD_STATUS']:
         kwargs['status'] = status
@@ -56,10 +59,11 @@ class JsonErrorResponse(Exception):
         raise JsonErrorResponse(description='text')
         raise JsonErrorResponse(status=401, one='text', two=12)
 
-    :param status: HTTP response status code.
-    :param kwargs: keyword arguments to put in result JSON.
+    Args:
+        status: HTTP response status code.
+        kwargs: keyword arguments to put in result JSON.
 
-    .. seealso::
+    See Also:
         :func:`.json_response`,
         :meth:`@error_handler <.FlaskJSON.error_handler>`.
     """
@@ -76,9 +80,9 @@ class JsonRequest(Request):
     :meth:`flask.Request.get_json` will raise :class:`.JsonErrorResponse`
     by default on invalid JSON content.
 
-    You can configure the behaviour by
-    :ref:`JSON_DECODE_ERROR_MESSAGE <opt_decode_error_msg>` or
-    :meth:`@invalid_json_error <.FlaskJSON.invalid_json_error>`.
+    See Also:
+        :ref:`JSON_DECODE_ERROR_MESSAGE <opt_decode_error_msg>`,
+        :meth:`@invalid_json_error <.FlaskJSON.invalid_json_error>`
     """
     def on_json_loading_failed(self, e):
         # Try decoder error hook firstly; see FlaskJSON.invalid_json_error().
@@ -106,7 +110,7 @@ class JSONEncoderEx(json.JSONEncoder):
 
     Time related values will be converted to ISO 8601 format by default.
 
-    .. seealso::
+    See Also:
         :ref:`JSON_DATETIME_FORMAT <opt_fmt_datetime>`,
         :ref:`JSON_DATE_FORMAT <opt_fmt_date>`,
         :ref:`JSON_TIME_FORMAT <opt_fmt_time>`.
@@ -144,7 +148,8 @@ class FlaskJSON(object):
     def init_app(self, app):
         """Initializes the application with the extension.
 
-        :param app: Flask application object.
+        Args:
+            app: Flask application object.
         """
         app.config.setdefault('JSON_ADD_STATUS', True)
         app.config.setdefault('JSON_DECODE_ERROR_MESSAGE', 'Not a JSON.')
@@ -166,17 +171,20 @@ class FlaskJSON(object):
         an exception. If user defined handler returns ``None`` then default
         action takes place (generate JSON response from the exception).
 
-        Example::
+        Example:
 
-            json = FlaskJson(app)
-            ...
+            ::
 
-            @json.error_handler
-            def custom_error_handler(e):
-                # e is JsonErrorResponse.
-                return json_response(status=401)
+                json = FlaskJson(app)
+                ...
 
-        .. seealso:: :meth:`.invalid_json_error`.
+                @json.error_handler
+                def custom_error_handler(e):
+                    # e is JsonErrorResponse.
+                    return json_response(status=401)
+
+        See Also:
+            :meth:`.invalid_json_error`.
         """
         self._error_handler_func = func
         return func
@@ -191,14 +199,16 @@ class FlaskJSON(object):
         If the handler returns or raises nothing then Flask-JSON
         raises :class:`.JsonErrorResponse`.
 
-        Example::
+        Example:
 
-            json = FlaskJson(app)
-            ...
+            ::
 
-            @json.encoder
-            def invalid_json_error(e):
-                raise SomeException
+                json = FlaskJson(app)
+                ...
+
+                @json.invalid_json_error
+                def invalid_json_error(e):
+                    raise SomeException
 
         By default JSON response will be generated with HTTP 400::
 
@@ -207,7 +217,7 @@ class FlaskJSON(object):
         You also may return a value from the handler then it will be used as
         :meth:`request.get_json() <flask.Request.get_json>` result on errors.
 
-        .. seealso::
+        See Also:
             :ref:`JSON_DECODE_ERROR_MESSAGE <opt_decode_error_msg>`
         """
         self._decoder_error_func = func
@@ -226,15 +236,17 @@ class FlaskJSON(object):
         If user defined encoder returns None then default encoders takes place
         (Flask-JSON and then Flask).
 
-        Example::
+        Example:
 
-            json = FlaskJson(app)
-            ...
+            ::
 
-            @json.encoder
-            def custom_encoder(o):
-                if isinstance(o, MyClass):
-                    return o.to_string()
+                json = FlaskJson(app)
+                ...
+
+                @json.encoder
+                def custom_encoder(o):
+                    if isinstance(o, MyClass):
+                        return o.to_string()
         """
         class JSONEncoderWithHook(JSONEncoderEx):
             def default(self, o):
