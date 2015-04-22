@@ -9,10 +9,7 @@ It helps to handle JSON-based requests and provides the following features:
 * :func:`~flask_json.json_response` - function to generate JSON responses.
 * :class:`~flask_json.JsonErrorResponse` - exception to generate JSON error
   responses.
-* Support of the python's :class:`~datetime.datetime`, :class:`~datetime.date`,
-  :class:`~datetime.time` and
-  `speaklater's <https://pypi.python.org/pypi/speaklater>`_ lazy strings
-  in JSON responses.
+* Extended JSON encoding support (see :ref:`encoding`).
 
 Installation
 ------------
@@ -69,9 +66,115 @@ Now responses looks like that::
     $ curl -X POST --data '{"value": 41}' http://localhost:5000/increment_value
     {"value": 42}
 
-Examples are available on
+Examples
+--------
+
+There are few examples are available on
 `GitHub <https://github.com/skozlovf/flask-json/tree/master/examples>`_.
 
+You also may take a look at
+`tests <https://github.com/skozlovf/flask-json/tree/master/test_json.py>`_.
+
+.. _encoding:
+
+Encoding values
+---------------
+
+Flask-JSON supports encoding for several types out of the box and also provides
+few ways to extend encoding.
+
+iterables
+^^^^^^^^^
+
+Any iterable type will be converted to list value::
+
+    # set object
+    json_response(items=set([1, 2, 3]))
+    # {status=200, items=[1, 2, 3]}
+
+    # generator
+    json_response(items=(x for x in [3, 2, 42]))
+    # {status=200, items=[3, 2, 42]}
+
+    # iterator
+    json_response(lst=iter([1, 2, 3]))
+    # {status=200, items=[1, 2, 3]}
+
+time values
+^^^^^^^^^^^
+
+:class:`~datetime.datetime`, :class:`~datetime.date` and :class:`~datetime.time`
+will be converted to ISO 8601 or custom format depending on configuration::
+
+    json_response(datetime=datetime(2014, 5, 12, 17, 24, 10),
+                  date=date(2015, 12, 7),
+                  time=time(12, 34, 56))
+    # {
+    #   "status": 200,
+    #   "datetime": "2014-05-12T17:24:10",
+    #   "date": "2015-12-07",
+    #   "time": "12:34:56"
+    # }
+
+``JSON_*_FORMAT`` options allows to change result format.
+
+
+translation strings
+^^^^^^^^^^^^^^^^^^^
+
+`speaklater's <https://pypi.python.org/pypi/speaklater>`_ ``_LazyString``
+is used by `Flask-Babel <https://pythonhosted.org/Flask-Babel/>`_ and
+`Flask-BabelEx <http://pythonhosted.org/Flask-BabelEx/>`_.
+
+You can use it in JSON responses too, _LazyString will be converted to Unicode
+string with translation::
+
+    json_response(item=gettext('bla'))
+    # {status=200, item='бла'}
+
+
+custom objects
+^^^^^^^^^^^^^^
+
+To encode custom objects you can use
+:meth:`@encoder <flask_json.FlaskJSON.encoder>` or implement special methods:
+``__json__()`` or ``for_json()``::
+
+    class MyJsonItem(object):
+        def __json__(self):
+            return '<__json__>'
+
+    json_response(item=MyJsonItem())
+    # {status=200, item='<__json__>'}
+
+or::
+
+    class MyJsonItem(object):
+        def for_json(self):
+            return '<for_json>'
+
+    json_response(item=MyJsonItem())
+    # {status=200, item='<for_json>'}
+
+.. note:: To enable this approach you have to set
+    :ref:`JSON_USE_ENCODE_METHODS <opt_use_enc_methods>` to ``True``.
+
+Encoding order
+^^^^^^^^^^^^^^
+
+Flask-JSON calls encoders in the following order:
+
+
+* User defined :meth:`@encoder <flask_json.FlaskJSON.encoder>`.
+* Flask-JSON encoders:
+    * ``_LazyString``
+    * iterables
+    * :class:`~datetime.datetime`
+    * :class:`~datetime.date`
+    * :class:`~datetime.time`
+    * ``__json__()`` method
+    * ``for_json()`` method
+* Flask encoders.
 
 Configuration
 -------------
@@ -127,6 +230,16 @@ You can configure Flask-JSON with the following options:
                                 in JSON response.
 
                                 Default is ISO 8601: ``HH-MM-SS``.
+
+``JSON_USE_ENCODE_METHODS``     .. _opt_use_enc_methods:
+
+                                Check for ``__json__()`` and ``for_json()``
+                                object methods while JSON encoding.
+
+                                This allows to support custom objects in JSON
+                                response.
+
+                                Default: ``False``.
 =============================   ================================================
 
 See :ref:`python:strftime-strptime-behavior` for more info about time related
