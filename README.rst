@@ -9,8 +9,8 @@ application.
 
 Features:
 
-* Works on python 2.6, 2.7, 3.3+ and Flask 0.10+
-* More ways to generate JSON responses (comparing to plain Flask)
+* Works on python 2.6, 2.7, 3.3+ and Flask 0.10+.
+* More ways to generate JSON responses (comparing to plain Flask).
 * Extended JSON encoding support.
 
 Usage
