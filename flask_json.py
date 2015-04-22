@@ -8,6 +8,7 @@
     :license: BSD, see LICENSE for more details.
 """
 import sys
+import collections
 from datetime import datetime, date, time
 try:
     from speaklater import _LazyString
@@ -104,29 +105,44 @@ class JsonRequest(Request):
 
 class JSONEncoderEx(json.JSONEncoder):
     """Extends default Flask JSON encoder with more types:
-    :class:`~datetime.date`, :class:`~datetime.time` and
-    `speaklater <https://pypi.python.org/pypi/speaklater>`_ lazy strings.
-    Also overrides :class:`~datetime.datetime` encoding.
+
+    * iterable;
+    * :class:`~datetime.datetime`;
+    * :class:`~datetime.date`;
+    * :class:`~datetime.time`;
+    * `speaklater <https://pypi.python.org/pypi/speaklater>`_ lazy strings;
+    * objects with ``__json__()`` or ``for_json()`` methods.
 
     Time related values will be converted to ISO 8601 format by default.
 
     See Also:
         :ref:`JSON_DATETIME_FORMAT <opt_fmt_datetime>`,
         :ref:`JSON_DATE_FORMAT <opt_fmt_date>`,
-        :ref:`JSON_TIME_FORMAT <opt_fmt_time>`.
+        :ref:`JSON_TIME_FORMAT <opt_fmt_time>`,
+        :ref:`JSON_USE_ENCODE_METHODS <opt_use_enc_methods>`.
     """
     def default(self, o):
+        # We have to test _LazyString before Iterable to prevent
+        # converting string to list of chars, since string is iterable too.
         if _LazyString is not None and isinstance(o, _LazyString):
             return text_type(o)
+        elif current_app.config.get('JSON_USE_ENCODE_METHODS'):
+            if hasattr(o, '__json__'):
+                return o.__json__()
+            elif hasattr(o, 'for_json'):
+                return o.for_json()
+        elif isinstance(o, collections.Iterable):
+            # All iterables will be converted to list.
+            return list(o)
         elif isinstance(o, datetime):
             fmt = current_app.config.get('JSON_DATETIME_FORMAT')
-            return o.isoformat() if fmt is None else o.strftime(fmt)
+            return o.strftime(fmt) if fmt else o.isoformat()
         elif isinstance(o, date):
             fmt = current_app.config.get('JSON_DATE_FORMAT')
-            return o.isoformat() if fmt is None else o.strftime(fmt)
+            return o.strftime(fmt) if fmt else o.isoformat()
         elif isinstance(o, time):
             fmt = current_app.config.get('JSON_TIME_FORMAT')
-            return o.isoformat() if fmt is None else o.strftime(fmt)
+            return o.strftime(fmt) if fmt else o.isoformat()
         return super(JSONEncoderEx, self).default(o)
 
 
