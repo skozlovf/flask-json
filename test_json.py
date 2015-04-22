@@ -330,7 +330,7 @@ class TestLogic(object):
         assert_equals(data['tm'], '12:34:56')
         assert_equals(data['txt'], 'txt')
 
-    # Check if JSONEncoderEx calles original default() method.
+    # Check if JSONEncoderEx calls original default() method.
     # In such situation exception will be raised (not serializable).
     def test_encoder_invalid(self):
         @self.app.route('/test')
