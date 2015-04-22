@@ -39,7 +39,8 @@ else:
         assert_is_not,
         assert_is_none,
         assert_is_not_none,
-        assert_dict_equal
+        assert_dict_equal,
+        assert_raises
     )
 
 
@@ -254,6 +255,24 @@ class TestLogic(object):
         data = json.loads(r.data)
         assert_equals(data['text'], u'Привет')
 
+    # Test encoding iterable types: set, generators, iterators.
+    def test_encoder_iterable(self):
+        with self.app.test_request_context():
+            # set
+            r = json_response(lst=set([1, 2, 3]))
+            data = json.loads(r.data)
+            assert_equals(data['lst'], [1, 2, 3])
+
+            # generator
+            r = json_response(lst=(x for x in [3, 2, 42]))
+            data = json.loads(r.data)
+            assert_equals(data['lst'], [3, 2, 42])
+
+            # iterator
+            r = json_response(lst=iter([1, 2, 3]))
+            data = json.loads(r.data)
+            assert_equals(data['lst'], [1, 2, 3])
+
     # Test encoding if speaklater is not installed.
     # Here we just check if JSONEncoderEx.default() runs without errors.
     def test_encoder_nospeaklater(self):
@@ -306,6 +325,64 @@ class TestLogic(object):
         assert_equals(data['tm2'], '02:03:01')
         assert_equals(data['dt'], '2015.12.07')
         assert_equals(data['dtm'], '2014/05/12 17-24-10')
+
+    # Test if __json__() and for_json() is disabled by default.
+    def test_encoder_obj(self):
+        class MyJsonItem(object):
+            val = None
+
+            def __init__(self, val=None):
+                self.val = val
+
+            def __json__(self):
+                return '<empty>' if self.val is None else str(self.val)
+
+        with self.app.test_request_context():
+            with assert_raises(TypeError):
+                json_response(item=MyJsonItem())
+
+    # Test __json__().
+    def test_encoder_obj_json(self):
+        # To use __json__() and for_json() we have to set this config.
+        self.app.config['JSON_USE_ENCODE_METHODS'] = True
+
+        class MyJsonItem(object):
+            def __json__(self):
+                return '<__json__>'
+
+        with self.app.test_request_context():
+            r = json_response(item=MyJsonItem())
+            data = json.loads(r.data)
+            assert_equals(data['item'], '<__json__>')
+
+    # Test for_json().
+    def test_encoder_obj_for_json(self):
+        self.app.config['JSON_USE_ENCODE_METHODS'] = True
+
+        class MyJsonItem(object):
+            def for_json(self):
+                return '<for_json>'
+
+        with self.app.test_request_context():
+            r = json_response(item=MyJsonItem())
+            data = json.loads(r.data)
+            assert_equals(data['item'], '<for_json>')
+
+    # Test if __json__() calles before for_json().
+    def test_encoder_obj_priority(self):
+        self.app.config['JSON_USE_ENCODE_METHODS'] = True
+
+        class MyJsonItem(object):
+            def __json__(self):
+                return '<__json__>'
+
+            def for_json(self):
+                return '<for_json>'
+
+        with self.app.test_request_context():
+            r = json_response(item=MyJsonItem())
+            data = json.loads(r.data)
+            assert_equals(data['item'], '<__json__>')
 
     # Test response JSON encoder with custom encoding.
     def test_encoder_hook(self):
