@@ -12,7 +12,7 @@ It helps to handle JSON-based requests and provides the following features:
 * Support of the python's :class:`~datetime.datetime`, :class:`~datetime.date`,
   :class:`~datetime.time` and
   `speaklater's <https://pypi.python.org/pypi/speaklater>`_ lazy strings
-  in JSON requests.
+  in JSON responses.
 
 Installation
 ------------
