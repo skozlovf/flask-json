@@ -32,9 +32,20 @@ from flask_json import __version__
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.intersphinx'
 ]
+
+# To support napoleon extension on both old and new Sphinx.
+# Old one may be used on 'Read The Docs'.
+# From napoleon extension docs:
+# As of Sphinx 1.3, the napoleon extension will come packaged with Sphinx under
+# sphinx.ext.napoleon. The sphinxcontrib.napoleon extension will continue
+# to work with Sphinx <= 1.2.
+import sphinx
+if sphinx.version_info < (1, 3):
+    extensions.append('sphinxcontrib.napoleon')
+else:
+    extensions.append('sphinx.ext.napoleon')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
