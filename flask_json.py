@@ -23,7 +23,7 @@ text_type = unicode if sys.version_info[0] == 2 else str
 
 def json_response(status=200, **kwargs):
     """:func:`~flask.json.jsonify` wrapper to build JSON response
-    with the given HTTP status and fields.
+    with the given HTTP status and fields(``kwargs``).
 
     It also puts status to the JSON response if
     :ref:`JSON_ADD_STATUS <opt_add_status>` is ``True``::
@@ -88,7 +88,7 @@ class JsonRequest(Request):
             if response is not None:
                 return response
 
-        # By defualt we raise json error with description.
+        # By default we raise json error with description.
         # If there is no description config or it's text is empty then
         # raise without a description.
         desc = current_app.config.get('JSON_DECODE_ERROR_MESSAGE')
@@ -163,7 +163,7 @@ class FlaskJSON(object):
         :class:`.JsonErrorResponse` exceptions.
 
         In custom handler you may return :class:`flask.Response` or raise
-        an exception. If user defined handler returns None then default
+        an exception. If user defined handler returns ``None`` then default
         action takes place (generate JSON response from the exception).
 
         Example::
