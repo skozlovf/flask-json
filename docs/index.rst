@@ -130,7 +130,7 @@ You can use it in JSON responses too, _LazyString will be converted to Unicode
 string with translation::
 
     json_response(item=gettext('bla'))
-    # {status=200, item='бла'}
+    # {status=200, item='<translation>'}
 
 
 custom objects
