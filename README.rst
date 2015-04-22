@@ -16,7 +16,9 @@ Features:
 Usage
 -----
 
-Here is fast example::
+Here is fast example:
+
+.. code-block:: python
 
     from datetime import datetime
     from flask import Flask
@@ -39,7 +41,9 @@ Here is fast example::
     if __name__ == '__main__':
         app.run()
 
-Responses::
+Responses:
+
+.. code-block:: json
 
     GET /get_time HTTP/1.1
 
@@ -52,7 +56,7 @@ Responses::
       "time": "2015-04-14T13:17:16.732000"
     }
 
-::
+.. code-block:: json
 
     GET /raise_error HTTP/1.1
 
