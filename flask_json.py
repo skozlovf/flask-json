@@ -126,11 +126,6 @@ class JSONEncoderEx(json.JSONEncoder):
         # converting string to list of chars, since string is iterable too.
         if _LazyString is not None and isinstance(o, _LazyString):
             return text_type(o)
-        elif current_app.config.get('JSON_USE_ENCODE_METHODS'):
-            if hasattr(o, '__json__'):
-                return o.__json__()
-            elif hasattr(o, 'for_json'):
-                return o.for_json()
         elif isinstance(o, collections.Iterable):
             # All iterables will be converted to list.
             return list(o)
@@ -143,6 +138,11 @@ class JSONEncoderEx(json.JSONEncoder):
         elif isinstance(o, time):
             fmt = current_app.config.get('JSON_TIME_FORMAT')
             return o.strftime(fmt) if fmt else o.isoformat()
+        elif current_app.config.get('JSON_USE_ENCODE_METHODS'):
+            if hasattr(o, '__json__'):
+                return o.__json__()
+            elif hasattr(o, 'for_json'):
+                return o.for_json()
         return super(JSONEncoderEx, self).default(o)
 
 
