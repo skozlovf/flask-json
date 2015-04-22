@@ -13,7 +13,7 @@ from flask_json import (
     JsonRequest,
     JsonErrorResponse
 )
-from nose.tools import assert_equals
+from nose.tools import assert_equals, assert_true
 
 # To support python 2.6 tests we have to add few missing functions.
 import sys
@@ -39,8 +39,7 @@ else:
         assert_is_not,
         assert_is_none,
         assert_is_not_none,
-        assert_dict_equal,
-        assert_raises
+        assert_dict_equal
     )
 
 
@@ -338,8 +337,12 @@ class TestLogic(object):
                 return '<empty>' if self.val is None else str(self.val)
 
         with self.app.test_request_context():
-            with assert_raises(TypeError):
+            try:
                 json_response(item=MyJsonItem())
+                has_exception = False
+            except TypeError:
+                has_exception = True
+            assert_true(has_exception)
 
     # Test __json__().
     def test_encoder_obj_json(self):
