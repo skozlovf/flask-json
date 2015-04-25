@@ -184,10 +184,29 @@ You can configure Flask-JSON with the following options:
 =============================   ================================================
 ``JSON_ADD_STATUS``             .. _opt_add_status:
 
-                                Put ``status`` field in all JSON
-                                responses.
+                                Put HTTP status field in all JSON responses.
+
+                                Name of the field depends on
+                                :ref:`JSON_STATUS_FIELD_NAME <opt_status_name>`.
+
+                                See :func:`~flask_json.json_response` for more
+                                info.
 
                                 Default: ``True``.
+
+``JSON_STATUS_FIELD_NAME``      .. _opt_status_name:
+
+                                Name of the field with HTTP status in
+                                JSON response.
+
+                                This field is present only if
+                                :ref:`JSON_ADD_STATUS <opt_add_status>` is
+                                enabled.
+
+                                See :func:`~flask_json.json_response` for more
+                                info.
+
+                                Default: ``status``.
 
 ``JSON_DECODE_ERROR_MESSAGE``   .. _opt_decode_error_msg:
 
