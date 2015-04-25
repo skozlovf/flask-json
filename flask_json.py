@@ -15,7 +15,7 @@ try:
 # Don't cover since simulated in test_encoder_nospeaklater().
 except ImportError:  # pragma: no cover
     _LazyString = None
-from flask import current_app, jsonify, Request
+from flask import current_app, jsonify, Request, Response
 from flask import json
 
 __version__ = '0.0.1'
@@ -201,6 +201,49 @@ class JSONEncoderEx(json.JSONEncoder):
         return super(JSONEncoderEx, self).default(o)
 
 
+class JsonTestResponse(Response):
+    """JSON Response class for testing.
+
+    It provides convenient access to JSON content without explicit response
+    data decoding.
+
+    Flask-JSON replaces Flask's response class with this one
+    on initialization if testing mode enabled.
+
+    Usage:
+
+    .. code-block:: py
+
+        app = Flask()
+        app.config['TESTING'] = True
+        FlaskJSON(app)
+        ...
+        client = app.test_client()
+        r = client.get('/view')  # suppose it returns json_response(param='12)
+        assert r.json['param'] == 12
+
+    If you enable testing after Flask-JSON initialization the you have to
+    set :class:`.JsonTestResponse` by yourself:
+
+    .. code-block:: py
+
+        app = Flask()
+        FlaskJSON(app)
+        app.config['TESTING'] = True
+        app.response_class = JsonTestResponse
+
+    """
+    _json_cache = None
+
+    @property
+    def json(self):
+        """Response JSON content."""
+        if self._json_cache is None:
+            assert self.mimetype == 'application/json'
+            self._json_cache = json.loads(self.data)
+        return self._json_cache
+
+
 class FlaskJSON(object):
     """Flask-JSON extension class."""
     def __init__(self, app=None):
@@ -234,6 +277,9 @@ class FlaskJSON(object):
         app.request_class = JsonRequest
         app.json_encoder = self._encoder_class
         app.errorhandler(JsonErrorResponse)(self._error_handler)
+
+        if app.testing:
+            app.response_class = JsonTestResponse
 
     def error_handler(self, func):
         """This decorator allows to set custom handler for the
