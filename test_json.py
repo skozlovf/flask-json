@@ -160,29 +160,25 @@ class TestLogic(object):
 
     # Test json_response().
     def test_json_response(self):
-        self.ctx = self.app.test_request_context()
-        self.ctx.push()
+        with self.app.test_request_context():
+            r = json_response()
+            assert_equals(r.status_code, 200)
+            assert_equals(r.mimetype, 'application/json')
 
-        r = json_response()
-        assert_equals(r.status_code, 200)
-        assert_equals(r.mimetype, 'application/json')
+            r = json_response(status=400)
+            assert_equals(r.status_code, 400)
 
-        r = json_response(status=400)
-        assert_equals(r.status_code, 400)
+            # Response will contains status by default.
+            r = json_response(some='val', data=42)
+            assert_equals(r.status_code, 200)
+            data = json.loads(r.data)
+            assert_dict_equal(data, {'status': 200, 'some': 'val', 'data': 42})
 
-        # Response will contains status by default.
-        r = json_response(some='val', data=42)
-        assert_equals(r.status_code, 200)
-        data = json.loads(r.data)
-        assert_dict_equal(data, {'status': 200, 'some': 'val', 'data': 42})
-
-        # Disable status in response
-        self.app.config['JSON_ADD_STATUS'] = False
-        r = json_response(some='val', data=42)
-        data = json.loads(r.data)
-        assert_dict_equal(data, {'some': 'val', 'data': 42})
-
-        self.ctx.pop()
+            # Disable status in response.
+            self.app.config['JSON_ADD_STATUS'] = False
+            r = json_response(some='val', data=42)
+            data = json.loads(r.data)
+            assert_dict_equal(data, {'some': 'val', 'data': 42})
 
     # Test simple JsonErrorResponse.
     def test_json_error(self):
