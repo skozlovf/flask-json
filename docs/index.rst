@@ -264,6 +264,21 @@ You can configure Flask-JSON with the following options:
 See :ref:`python:strftime-strptime-behavior` for more info about time related
 formats.
 
+Testing
+-------
+
+Flask-JSON also may help in testing your JSON API calls. It replaces
+Flask's :class:`~flask.Response` class with custom one if ``TESTING`` config
+flag is enabled.
+
+With Flask-JSON response class :class:`~flask_json.JsonTestResponse` you can
+use :attr:`~flask_json.JsonTestResponse.json` attribute.
+Here is example test project:
+
+.. literalinclude:: ../examples/example_test.py
+   :language: python
+
+
 Decorators
 ----------
 
@@ -324,6 +339,10 @@ This section describes Flask-JSON functions and classes.
 .. autofunction:: flask_json.json_response
 
 .. autoclass:: flask_json.JsonErrorResponse
+    :members:
+    :special-members: __init__
+
+.. autoclass:: flask_json.JsonTestResponse
     :members:
     :special-members: __init__
 
