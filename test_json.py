@@ -211,6 +211,32 @@ class TestLogic(object):
             assert_equals(r.status_code, 400)
             assert_dict_equal(data, {'http_status': 'my value'})
 
+    # Test headers of the json_response() generated response.
+    def test_json_response_headers(self):
+        with self.app.test_request_context():
+            # One way to add custom headers is dict.
+            hdr = {'MY-HEADER': 'my value', 'X-HEADER': 42}
+            r = json_response(headers_=hdr)
+            assert_equals(r.status_code, 200)
+            assert_equals(r.mimetype, 'application/json')
+
+            # There must be at least Content-Type, Content-Length and
+            # our 2 extra headers.
+            assert_equals(r.headers.get('Content-Type'), 'application/json')
+            assert_true(r.headers.get('Content-Length', type=int) > 0)
+            assert_equals(r.headers.get('MY-HEADER'), 'my value')
+            assert_equals(r.headers.get('X-HEADER', type=int), 42)
+
+            # Another way to add custom headers is iterable.
+            hdr = (('MY-HEADER', 'my value'), ('X-HEADER', 42))
+            r = json_response(headers_=hdr)
+            assert_equals(r.status_code, 200)
+            assert_equals(r.mimetype, 'application/json')
+            assert_equals(r.headers.get('Content-Type'), 'application/json')
+            assert_true(r.headers.get('Content-Length', type=int) > 0)
+            assert_equals(r.headers.get('MY-HEADER'), 'my value')
+            assert_equals(r.headers.get('X-HEADER', type=int), 42)
+
     # Test simple JsonErrorResponse.
     def test_json_error(self):
         @self.app.route('/test')
