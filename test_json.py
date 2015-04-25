@@ -271,6 +271,22 @@ class TestLogic(object):
         data = json.loads(r.data)
         assert_dict_equal(data, {'info': 'Some info'})
 
+    # Test JsonErrorResponse with custom headers.
+    def test_json_error_with_headers(self):
+        @self.app.route('/test')
+        def endpoint():
+            headers = (('MY', 123), )
+            raise JsonErrorResponse(headers_=headers, status_=401,
+                                    info='Some info')
+
+        r = self.client.get('/test')
+        assert_equals(r.status_code, 401)
+        data = json.loads(r.data)
+        assert_dict_equal(data, {'status': 401, 'info': 'Some info'})
+        assert_true(r.headers.get('Content-Length', type=int) > 0)
+        assert_equals(r.headers.get('Content-Type'), 'application/json')
+        assert_equals(r.headers.get('MY'), '123')
+
     # Test JsonErrorResponse handler.
     def test_json_error_handler(self):
         @self.app.route('/test')

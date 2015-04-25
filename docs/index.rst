@@ -325,6 +325,7 @@ This section describes Flask-JSON functions and classes.
 
 .. autoclass:: flask_json.JsonErrorResponse
     :members:
+    :special-members: __init__
 
 Low-Level API
 ^^^^^^^^^^^^^
