@@ -12,7 +12,8 @@ import collections
 from datetime import datetime, date, time
 try:
     from speaklater import _LazyString
-except ImportError:
+# Don't cover since simulated in test_encoder_nospeaklater().
+except ImportError:  # pragma: no cover
     _LazyString = None
 from flask import current_app, jsonify, Request
 from flask import json
