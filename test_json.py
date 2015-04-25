@@ -72,6 +72,11 @@ def test_init_constructor():
 # Check initial config on deferred init.
 def test_init():
     app = Flask(__name__)
+
+    # Check if we correctly handle this.
+    # Well actually it's to increase test coverage.
+    del app.extensions
+
     ext = FlaskJSON()
     ext.init_app(app)
 
@@ -165,7 +170,7 @@ class TestLogic(object):
             assert_equals(r.status_code, 200)
             assert_equals(r.mimetype, 'application/json')
 
-            r = json_response(status=400)
+            r = json_response(status_=400)
             assert_equals(r.status_code, 400)
 
             # Response will contains status by default.
@@ -179,6 +184,32 @@ class TestLogic(object):
             r = json_response(some='val', data=42)
             data = json.loads(r.data)
             assert_dict_equal(data, {'some': 'val', 'data': 42})
+
+    # Test status field in json_response().
+    def test_json_response_field(self):
+        with self.app.test_request_context():
+            # Use custom name for HTTP status.
+            self.app.config['JSON_STATUS_FIELD_NAME'] = 'http_status'
+            r = json_response()
+            data = json.loads(r.data)
+
+            assert_equals(r.status_code, 200)
+            assert_equals(r.mimetype, 'application/json')
+            assert_dict_equal(data, {'http_status': 200})
+
+            # Also if input data has key with the same name then it will be used
+            # instead of HTTP status code.
+            r = json_response(http_status='my value')
+            data = json.loads(r.data)
+            assert_equals(r.status_code, 200)
+            assert_dict_equal(data, {'http_status': 'my value'})
+
+            # Let's change HTTPS status too.
+            # See json_response() docs for more info.
+            r = json_response(400, http_status='my value')
+            data = json.loads(r.data)
+            assert_equals(r.status_code, 400)
+            assert_dict_equal(data, {'http_status': 'my value'})
 
     # Test simple JsonErrorResponse.
     def test_json_error(self):
