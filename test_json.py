@@ -8,6 +8,8 @@ from flask import Flask, request, json
 import flask_json
 from flask_json import (
     json_response,
+    _normalize_view_tuple,
+    as_json,
     FlaskJSON,
     JSONEncoderEx,
     JsonRequest,
@@ -540,3 +542,125 @@ class TestLogic(object):
 
         r = self.post_json('/test', data='bla', raw=True)
         assert_dict_equal(r.json, dict(status=400))
+
+    # -- @as_json() tests ------------------------------------------------------
+
+    # Test helper function for @as_json decorator.
+    def test_normalize_view_tuple(self):
+        # Test if view returns (dict, status, headers).
+        data, status, headers = _normalize_view_tuple((dict(), 200, []))
+        assert_is_instance(data, dict)
+        assert_is_instance(status, int)
+        assert_is_instance(headers, list)
+
+        data, status, headers = _normalize_view_tuple((dict(), 200, {}))
+        assert_is_instance(data, dict)
+        assert_is_instance(status, int)
+        assert_is_instance(headers, dict)
+
+        # Test if view returns (dict, ).
+        data, status, headers = _normalize_view_tuple((dict(), ))
+        assert_is_instance(data, dict)
+        assert_is_none(status)
+        assert_is_none(headers)
+
+        # Test if view returns (dict, headers, status).
+        data, status, headers = _normalize_view_tuple((dict(), [], 1))
+        assert_is_instance(data, dict)
+        assert_is_instance(status, int)
+        assert_is_instance(headers, list)
+
+        # Test if view returns (dict, headers).
+        data, status, headers = _normalize_view_tuple((dict(), []))
+        assert_is_instance(data, dict)
+        assert_is_none(status)
+        assert_is_instance(headers, list)
+
+        # Test if view returns (dict, status).
+        data, status, headers = _normalize_view_tuple((dict(), 2))
+        assert_is_instance(data, dict)
+        assert_is_instance(status, int)
+        assert_is_none(headers)
+
+    def test_as_json_simple(self):
+        @as_json
+        def view1():
+            """Doc"""
+            return dict(value=1)
+
+        # Just to make sure decorator is correctly wraps a function.
+        assert_equals(view1.__doc__, 'Doc')
+        assert_equals(view1.__name__, 'view1')
+
+        with self.app.test_request_context():
+            r = view1()
+            assert_is_instance(r, JsonTestResponse)
+            assert_equals(r.status_code, 200)
+            assert_dict_equal(r.json, {'status': 200, 'value': 1})
+
+    def test_as_json_status(self):
+        @as_json
+        def view1():
+            return dict(value=1), 401
+
+        with self.app.test_request_context():
+            r = view1()
+            assert_equals(r.status_code, 401)
+            assert_dict_equal(r.json, {'status': 401, 'value': 1})
+
+    def test_as_json_header(self):
+        @as_json
+        def view1():
+            return dict(value=1), dict(MY='hdr')
+
+        with self.app.test_request_context():
+            r = view1()
+            assert_equals(r.status_code, 200)
+            assert_dict_equal(r.json, {'status': 200, 'value': 1})
+
+            assert_equals(r.headers.get('Content-Type'), 'application/json')
+            assert_true(r.headers.get('Content-Length', type=int) > 0)
+            assert_equals(r.headers.get('MY'), 'hdr')
+
+    def test_as_json_status_header(self):
+        @as_json
+        def view1():
+            return dict(value=1), 400, dict(MY='hdr')
+
+        with self.app.test_request_context():
+            r = view1()
+            assert_equals(r.status_code, 400)
+            assert_dict_equal(r.json, {'status': 400, 'value': 1})
+
+            assert_equals(r.headers.get('Content-Type'), 'application/json')
+            assert_true(r.headers.get('Content-Length', type=int) > 0)
+            assert_equals(r.headers.get('MY'), 'hdr')
+
+    def test_as_json_header_status(self):
+        @as_json
+        def view1():
+            return dict(value=1), dict(MY='hdr'), 400
+
+        with self.app.test_request_context():
+            r = view1()
+            assert_equals(r.status_code, 400)
+            assert_dict_equal(r.json, {'status': 400, 'value': 1})
+
+            assert_equals(r.headers.get('Content-Type'), 'application/json')
+            assert_true(r.headers.get('Content-Length', type=int) > 0)
+            assert_equals(r.headers.get('MY'), 'hdr')
+
+    # Test invalid return value.
+    # See also comments for _normalize_view_tuple().
+    def test_as_json_invalid(self):
+        @as_json
+        def view1():
+            return object()  # not supported.
+
+        with self.app.test_request_context():
+            try:
+                view1()
+                has_exception = False
+            except ValueError:
+                has_exception = True
+        assert_true(has_exception)
