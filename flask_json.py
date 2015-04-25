@@ -9,6 +9,7 @@
 """
 import sys
 import collections
+from functools import wraps
 from datetime import datetime, date, time
 try:
     from speaklater import _LazyString
@@ -98,6 +99,62 @@ def json_response(status_=200, headers_=None, **kwargs):
         response.headers.extend(headers_)
 
     return response
+
+
+# Helper function to normalize view return values for @as_json decorator.
+# It always returns (dict, status, headers). Missing values will be None.
+# For example in such cases when tuple_ is
+#   (dict, status), (dict, headers), (dict, status, headers),
+#   (dict, headers, status)
+#
+# It assumes what status is int, so this construction will not work:
+# (dict, None, headers) - it doesn't make sense because you just use
+# (dict, headers) if you want to skip status.
+def _normalize_view_tuple(tuple_):
+    v = tuple_ + (None,) * (3 - len(tuple_))
+    return v if isinstance(v[1], int) else (v[0], v[2], v[1])
+
+
+def as_json(f):
+    """This decorator converts view's return value to JSON response.
+
+    The decorator expects the following return values:
+        * a dict with JSON content,
+        * a tuple of (dict, status) or (dict, headers) or
+          (dict, status, headers) or (dict, headers, status).
+
+    In all other cases it raises an error.
+
+    Usage::
+
+        @as_json
+        def view_simple():
+            return dict(param=value, param2=value2)
+
+        @as_json
+        def view_comp():
+            return dict(param=value, param2=value2), 400
+
+    Returns:
+        flask.Response: Response with the JSON content.
+
+    Raises:
+        ValueError: if return value is not supported.
+
+    See Also:
+        :func:`.json_response`
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        rv = f(*args, **kwargs)
+        if isinstance(rv, dict):
+            return json_response(**rv)
+        elif isinstance(rv, tuple):
+            d, status, headers = _normalize_view_tuple(rv)
+            return json_response(status_=status or 200, headers_=headers, **d)
+        else:
+            raise ValueError('Unsupported return value.')
+    return wrapper
 
 
 # TODO: maybe subclass from HTTPException?
