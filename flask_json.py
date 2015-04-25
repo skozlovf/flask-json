@@ -68,9 +68,20 @@ def json_response(status_=200, headers_=None, **kwargs):
         json_response(http_status=100500, test=12)
         # {"http_status": 100500, "test": 12}, but response HTTP status is 200.
 
+    You also may add custom headers to the JSON response by passing iterable or
+    dict to `headers_`::
+
+        # One way.
+        headers = {'MY-HEADER': value, 'X-EXTRA': 123}
+        json_response(headers_=headers, test=12)
+
+        # Another way (tuple, list, iterable).
+        headers = (('MY-HEADER', value), ('X-EXTRA', 123))
+        json_response(headers_=headers, test=12)
+
     Args:
         `status_`: HTTP response status code.
-        `headers_`: list or dictionary with header values.
+        `headers_`: iterable or dictionary with header values.
         kwargs: keyword arguments to put in result JSON.
 
     Returns:
