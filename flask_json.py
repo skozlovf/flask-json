@@ -107,20 +107,26 @@ class JsonErrorResponse(Exception):
     Usage::
 
         raise JsonErrorResponse(description='text')
-        raise JsonErrorResponse(status=401, one='text', two=12)
-
-    Args:
-        status: HTTP response status code.
-        kwargs: keyword arguments to put in result JSON.
-
-    See Also:
-        :func:`.json_response`,
-        :meth:`@error_handler <.FlaskJSON.error_handler>`.
+        raise JsonErrorResponse(status_=401, one='text', two=12)
     """
-    def __init__(self, status=400, **kwargs):
+    def __init__(self, status_=400, headers_=None, **kwargs):
+        """Construct error object.
+
+        Parameters are the same as for :func:`.json_response`.
+
+        Args:
+            `status_`: HTTP response status code.
+            `headers_`: iterable or dictionary with header values.
+            kwargs: keyword arguments to put in result JSON.
+
+        See Also:
+            :func:`.json_response`,
+            :meth:`@error_handler <.FlaskJSON.error_handler>`.
+        """
         super(JsonErrorResponse, self).__init__()
-        assert status != 200
-        self.status = status
+        assert status_ != 200
+        self.status = status_
+        self.headers = headers_
         self.data = kwargs
 
 
@@ -208,7 +214,7 @@ class FlaskJSON(object):
     def _error_handler(self, e):
         if self._error_handler_func is not None:
             return self._error_handler_func(e)
-        return json_response(e.status, **e.data)
+        return json_response(e.status, e.headers, **e.data)
 
     def init_app(self, app):
         """Initializes the application with the extension.
