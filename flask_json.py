@@ -22,32 +22,64 @@ __version__ = '0.0.1'
 text_type = unicode if sys.version_info[0] == 2 else str
 
 
-def json_response(status=200, **kwargs):
-    """:func:`~flask.json.jsonify` wrapper to build JSON response
+def json_response(status_=200, **kwargs):
+    """Helper function to build JSON response
     with the given HTTP status and fields(``kwargs``).
 
-    It also puts status to the JSON response if
+    It also puts HTTP status code to the JSON response if
     :ref:`JSON_ADD_STATUS <opt_add_status>` is ``True``::
 
         app.config['JSON_ADD_STATUS'] = True
         json_response(test=12)
-        # {"status": 200, "test": 12}
+        # {"status": 200, "test": 12}, response HTTP status is 200.
+
+        json_response(400, test=12)
+        # {"status": 400, "test": 12}, response HTTP status is 400.
+
+        json_response(status_=401, test=12)
+        # {"status": 401, "test": 12}, response HTTP status is 401.
 
         app.config['JSON_ADD_STATUS'] = False
         json_response(test=12)
-        # {"test": 12}
+        # {"test": 12}, response HTTP status is 200.
+
+    Name of the HTTP status filed is configurable and can be changed with
+    :ref:`JSON_STATUS_FIELD_NAME <opt_status_name>`::
+
+        app.config['JSON_ADD_STATUS'] = True
+        app.config['JSON_STATUS_FIELD_NAME'] = 'http_status'
+        json_response(test=12)
+        # {"http_status": 200, "test": 12}, response HTTP status is 200.
+
+    If ``kwargs`` already contains key with the same name as
+    ``JSON_STATUS_FIELD_NAME`` then it's value will be used instead of HTTP
+    status code::
+
+        app.config['JSON_ADD_STATUS'] = True
+
+        json_response(status_=400, status=100500, test=12)
+        # {"status": 100500, "test": 12}, but response HTTP status is 400.
+
+        json_response(status=100500, test=12)
+        # {"status": 100500, "test": 12}, but response HTTP status is 200.
+
+        app.config['JSON_STATUS_FIELD_NAME'] = 'http_status'
+        json_response(http_status=100500, test=12)
+        # {"http_status": 100500, "test": 12}, but response HTTP status is 200.
 
     Args:
-        status: HTTP response status code.
+        `status_`: HTTP response status code.
         kwargs: keyword arguments to put in result JSON.
 
     Returns:
         flask.Response: Response with the JSON content.
     """
     if current_app.config['JSON_ADD_STATUS']:
-        kwargs['status'] = status
+        field = current_app.config['JSON_STATUS_FIELD_NAME']
+        if field not in kwargs:
+            kwargs[field] = status_
     response = jsonify(**kwargs)
-    response.status_code = status
+    response.status_code = status_
     return response
 
 
@@ -168,6 +200,7 @@ class FlaskJSON(object):
             app: Flask application object.
         """
         app.config.setdefault('JSON_ADD_STATUS', True)
+        app.config.setdefault('JSON_STATUS_FIELD_NAME', 'status')
         app.config.setdefault('JSON_DECODE_ERROR_MESSAGE', 'Not a JSON.')
 
         if not hasattr(app, 'extensions'):
