@@ -23,7 +23,7 @@ __version__ = '0.0.1'
 text_type = unicode if sys.version_info[0] == 2 else str
 
 
-def json_response(status_=200, **kwargs):
+def json_response(status_=200, headers_=None, **kwargs):
     """Helper function to build JSON response
     with the given HTTP status and fields(``kwargs``).
 
@@ -70,6 +70,7 @@ def json_response(status_=200, **kwargs):
 
     Args:
         `status_`: HTTP response status code.
+        `headers_`: list or dictionary with header values.
         kwargs: keyword arguments to put in result JSON.
 
     Returns:
@@ -81,6 +82,10 @@ def json_response(status_=200, **kwargs):
             kwargs[field] = status_
     response = jsonify(**kwargs)
     response.status_code = status_
+
+    if headers_ is not None:
+        response.headers.extend(headers_)
+
     return response
 
 
