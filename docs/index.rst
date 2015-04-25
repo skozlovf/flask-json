@@ -7,7 +7,7 @@ application.
 It helps to handle JSON-based requests and provides the following features:
 
 * :func:`~flask_json.json_response` - function to generate JSON responses.
-* :class:`~flask_json.JsonErrorResponse` - exception to generate JSON error
+* :class:`~flask_json.JsonError` - exception to generate JSON error
   responses.
 * Extended JSON encoding support (see :ref:`encoding`).
 
@@ -303,14 +303,14 @@ to handle invalid JSON requests::
         ...
 
 :meth:`@error_handler <flask_json.FlaskJSON.error_handler>` -
-allows to handle :class:`.JsonErrorResponse` exceptions::
+allows to handle :class:`.JsonError` exceptions::
 
     json = FlaskJSON(app)
     ...
 
     @json.error_handler
     def error_handler(e):
-        # e - JsonErrorResponse.
+        # e - JsonError.
         return json_response(401, text='Something wrong.')
 
 :meth:`@encoder <flask_json.FlaskJSON.encoder>` -  allows to extend JSON
@@ -338,7 +338,7 @@ This section describes Flask-JSON functions and classes.
 
 .. autofunction:: flask_json.json_response
 
-.. autoclass:: flask_json.JsonErrorResponse
+.. autoclass:: flask_json.JsonError
     :members:
     :special-members: __init__
 

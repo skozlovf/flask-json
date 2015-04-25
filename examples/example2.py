@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Flask, request
-from flask_json import FlaskJSON, JsonErrorResponse, json_response
+from flask_json import FlaskJSON, JsonError, json_response
 
 app = Flask(__name__)
 FlaskJSON(app)
@@ -19,7 +19,7 @@ def increment_value():
     try:
         value = int(data['value'])
     except (KeyError, TypeError, ValueError):
-        raise JsonErrorResponse(description='Invalid value.')
+        raise JsonError(description='Invalid value.')
     return json_response(value=value + 1)
 
 

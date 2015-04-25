@@ -26,7 +26,7 @@ Here is fast example:
 
     from datetime import datetime
     from flask import Flask
-    from flask_json import FlaskJSON, JsonErrorResponse, json_response
+    from flask_json import FlaskJSON, JsonError, json_response
 
     app = Flask(__name__)
     FlaskJSON(app)
@@ -39,7 +39,7 @@ Here is fast example:
 
     @app.route('/raise_error')
     def raise_error():
-        raise JsonErrorResponse(description='Example text.', code=123)
+        raise JsonError(description='Example text.', code=123)
 
 
     if __name__ == '__main__':

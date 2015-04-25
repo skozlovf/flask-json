@@ -11,7 +11,7 @@ from flask_json import (
     FlaskJSON,
     JSONEncoderEx,
     JsonRequest,
-    JsonErrorResponse,
+    JsonError,
     JsonTestResponse
 )
 from nose.tools import assert_equals, assert_true
@@ -259,11 +259,11 @@ class TestLogic(object):
             assert_equals(r.headers.get('MY-HEADER'), 'my value')
             assert_equals(r.headers.get('X-HEADER', type=int), 42)
 
-    # Test simple JsonErrorResponse.
+    # Test simple JsonError.
     def test_json_error(self):
         @self.app.route('/test')
         def endpoint():
-            raise JsonErrorResponse
+            raise JsonError
 
         r = self.client.get('/test')
         assert_equals(r.status_code, 400)
@@ -274,11 +274,11 @@ class TestLogic(object):
         assert_equals(r.status_code, 400)
         assert_dict_equal(r.json, {})
 
-    # Test JsonErrorResponse with data.
+    # Test JsonError with data.
     def test_json_error_with_data(self):
         @self.app.route('/test')
         def endpoint():
-            raise JsonErrorResponse(info='Some info')
+            raise JsonError(info='Some info')
 
         r = self.client.get('/test')
         assert_equals(r.status_code, 400)
@@ -289,12 +289,12 @@ class TestLogic(object):
         assert_equals(r.status_code, 400)
         assert_dict_equal(r.json, {'info': 'Some info'})
 
-    # Test JsonErrorResponse with custom headers.
+    # Test JsonError with custom headers.
     def test_json_error_with_headers(self):
         @self.app.route('/test')
         def endpoint():
             headers = (('MY', 123), )
-            raise JsonErrorResponse(headers_=headers, status_=401,
+            raise JsonError(headers_=headers, status_=401,
                                     info='Some info')
 
         r = self.client.get('/test')
@@ -304,11 +304,11 @@ class TestLogic(object):
         assert_equals(r.headers.get('Content-Type'), 'application/json')
         assert_equals(r.headers.get('MY'), '123')
 
-    # Test JsonErrorResponse handler.
+    # Test JsonError handler.
     def test_json_error_handler(self):
         @self.app.route('/test')
         def endpoint():
-            raise JsonErrorResponse(info='Some info')
+            raise JsonError(info='Some info')
 
         # Just return error's info as HTTP 200.
         @self.ext.error_handler

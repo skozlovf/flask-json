@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Flask, request
-from flask_json import FlaskJSON, JsonErrorResponse, json_response
+from flask_json import FlaskJSON, JsonError, json_response
 
 app = Flask(__name__)
 json = FlaskJSON(app)
@@ -11,7 +11,7 @@ app.config['JSON_DATETIME_FORMAT'] = '%d/%m/%Y %H:%M:%S'
 
 @json.invalid_json_error
 def custom_error_handler(e):
-    raise JsonErrorResponse(status=418, hint="RTFM")
+    raise JsonError(status=418, hint="RTFM")
 
 
 @app.route('/get_time')
@@ -27,7 +27,7 @@ def increment_value():
     try:
         value = int(data['value'])
     except (KeyError, TypeError, ValueError):
-        raise JsonErrorResponse(description='Invalid value.')
+        raise JsonError(description='Invalid value.')
     return json_response(value=value + 1)
 
 

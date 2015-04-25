@@ -101,13 +101,13 @@ def json_response(status_=200, headers_=None, **kwargs):
 
 
 # TODO: maybe subclass from HTTPException?
-class JsonErrorResponse(Exception):
+class JsonError(Exception):
     """Exception which will be converted to JSON response.
 
     Usage::
 
-        raise JsonErrorResponse(description='text')
-        raise JsonErrorResponse(status_=401, one='text', two=12)
+        raise JsonError(description='text')
+        raise JsonError(status_=401, one='text', two=12)
     """
     def __init__(self, status_=400, headers_=None, **kwargs):
         """Construct error object.
@@ -123,7 +123,7 @@ class JsonErrorResponse(Exception):
             :func:`.json_response`,
             :meth:`@error_handler <.FlaskJSON.error_handler>`.
         """
-        super(JsonErrorResponse, self).__init__()
+        super(JsonError, self).__init__()
         assert status_ != 200
         self.status = status_
         self.headers = headers_
@@ -133,7 +133,7 @@ class JsonErrorResponse(Exception):
 class JsonRequest(Request):
     """This class changes :class:`flask.Request` behaviour on JSON parse errors.
 
-    :meth:`flask.Request.get_json` will raise :class:`.JsonErrorResponse`
+    :meth:`flask.Request.get_json` will raise :class:`.JsonError`
     by default on invalid JSON content.
 
     See Also:
@@ -153,9 +153,9 @@ class JsonRequest(Request):
         # raise without a description.
         desc = current_app.config.get('JSON_DECODE_ERROR_MESSAGE')
         if desc:
-            raise JsonErrorResponse(description=desc)
+            raise JsonError(description=desc)
         else:
-            raise JsonErrorResponse()
+            raise JsonError()
 
 
 class JSONEncoderEx(json.JSONEncoder):
@@ -276,14 +276,14 @@ class FlaskJSON(object):
         self._app = app
         app.request_class = JsonRequest
         app.json_encoder = self._encoder_class
-        app.errorhandler(JsonErrorResponse)(self._error_handler)
+        app.errorhandler(JsonError)(self._error_handler)
 
         if app.testing:
             app.response_class = JsonTestResponse
 
     def error_handler(self, func):
         """This decorator allows to set custom handler for the
-        :class:`.JsonErrorResponse` exceptions.
+        :class:`.JsonError` exceptions.
 
         In custom handler you may return :class:`flask.Response` or raise
         an exception. If user defined handler returns ``None`` then default
@@ -298,7 +298,7 @@ class FlaskJSON(object):
 
                 @json.error_handler
                 def custom_error_handler(e):
-                    # e is JsonErrorResponse.
+                    # e is JsonError.
                     return json_response(status=401)
 
         See Also:
@@ -315,7 +315,7 @@ class FlaskJSON(object):
         :meth:`request.get_json() <flask.Request.get_json>`.
 
         If the handler returns or raises nothing then Flask-JSON
-        raises :class:`.JsonErrorResponse`.
+        raises :class:`.JsonError`.
 
         Example:
 
