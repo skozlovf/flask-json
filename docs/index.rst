@@ -338,6 +338,8 @@ This section describes Flask-JSON functions and classes.
 
 .. autofunction:: flask_json.json_response
 
+.. autofunction:: flask_json.as_json
+
 .. autoclass:: flask_json.JsonError
     :members:
     :special-members: __init__
