@@ -29,8 +29,8 @@ class TestEncode(CommonTest):
     # All of the must be converted to array of values.
     def test_iterable(self):
         # set
-        r = json_response(lst=set([1, 2, 'hi']))
-        assert_equals(r.json['lst'], [1, 2, 'hi'])
+        r = json_response(lst=set([1, 2, 3]))
+        assert_equals(r.json['lst'], [1, 2, 3])
 
         # generator
         r = json_response(lst=(x for x in [3, 2, 42]))
