@@ -11,4 +11,4 @@ env:
   - FLASK=0.10.1 speaklater
 install:
   - pip install Flask==$FLASK
-script: nosetests test_json
+script: nosetests
