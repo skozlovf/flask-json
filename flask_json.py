@@ -119,11 +119,13 @@ def as_json(f):
     """This decorator converts view's return value to JSON response.
 
     The decorator expects the following return values:
-        * a dict with JSON content,
+        * a dict with JSON content;
         * a tuple of (dict, status) or (dict, headers) or
           (dict, status, headers) or (dict, headers, status).
 
     In all other cases it raises an error.
+
+    The decorator provides the same features as :func:`.json_response`.
 
     Usage::
 
