@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Flask, request
-from flask_json import FlaskJSON, JsonError, json_response
+from flask_json import FlaskJSON, JsonError, json_response, as_json
 
 app = Flask(__name__)
 FlaskJSON(app)
@@ -21,6 +21,12 @@ def increment_value():
     except (KeyError, TypeError, ValueError):
         raise JsonError(description='Invalid value.')
     return json_response(value=value + 1)
+
+
+@app.route('/get_value')
+@as_json
+def get_value():
+    return dict(value=12)
 
 
 if __name__ == '__main__':

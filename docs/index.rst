@@ -6,7 +6,8 @@ application.
 
 It helps to handle JSON-based requests and provides the following features:
 
-* :func:`~flask_json.json_response` - function to generate JSON responses.
+* :func:`~flask_json.json_response` and :func:`@as_json <flask_json.as_json>`
+  to generate JSON responses.
 * :class:`~flask_json.JsonError` - exception to generate JSON error
   responses.
 * Extended JSON encoding support (see :ref:`encoding`).
@@ -35,6 +36,9 @@ Example requests::
 
     $ curl http://localhost:5000/get_time
     {"status": 200, "time": "2015-04-14T08:44:13.973000"}
+
+    $ curl http://localhost:5000/get_value
+    {"status": 200, "value": 12}
 
     $ curl -X POST --data 'bla' http://localhost:5000/increment_value
     {"status": 400, "description": "Not a JSON."}
