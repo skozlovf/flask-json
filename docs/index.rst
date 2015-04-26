@@ -73,7 +73,7 @@ Now responses looks like that::
 Examples
 --------
 
-There are few examples are available on
+There are few examples available on
 `GitHub <https://github.com/skozlovf/flask-json/tree/master/examples>`_.
 
 You also may take a look at
