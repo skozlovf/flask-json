@@ -489,3 +489,5 @@ Low-Level API
 
 .. autoclass:: flask_json.JSONEncoderEx
     :members:
+
+.. include:: ../CHANGES
