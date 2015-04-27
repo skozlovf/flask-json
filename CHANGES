@@ -6,6 +6,20 @@ Flask-JSON Changelog
 
 This release is not fully backwards compatible with the 0.0.1 version.
 
+* New ``@as_json`` decorator.
+* New ``JsonTestResponse`` class.
+* Allow to change HTTP status field name.
+* Allow to set custom JSON response headers.
+* Better JSON error class API.
+* Better encoding: more types out of the box, better time values format handling,
+  fixed encoding order.
+* Better project documentation.
+* Better tests.
+
+Incompatible changes:
+
+* ``JsonErrorResponse`` renamed to ``JsonError``.
+* Changed ``json_response()`` signature.
 
 0.0.1
 -----
