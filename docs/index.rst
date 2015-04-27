@@ -1,3 +1,4 @@
+==========
 Flask-JSON
 ==========
 
@@ -17,7 +18,7 @@ It helps to handle JSON-based requests and provides the following features:
     :backlinks: none
 
 Installation
-------------
+============
 
 Install the extension with::
 
@@ -29,7 +30,7 @@ or::
 
 
 Initialization
---------------
+==============
 
 Before using Flask-JSON features you have to create
 :class:`~flask_json.FlaskJSON` instance and initialize it with the Flask
@@ -70,7 +71,7 @@ initialization::
         pass
 
 Basic usage
------------
+===========
 
 This section provides simple examples of usage with minimum comments just to
 demonstrate basic features. Next sections describes features more detailed.
@@ -121,7 +122,7 @@ Now responses looks like that::
     {"value": 42}
 
 Examples
---------
+========
 
 There are few examples available on
 `GitHub <https://github.com/skozlovf/flask-json/tree/master/examples>`_.
@@ -132,7 +133,7 @@ You also may take a look at
 .. _encoding:
 
 Creating JSON responses
------------------------
+=======================
 
 The main purpose of the Flask-JSON extension is to provide a convenient tool
 for creating JSON responses. This section describes how you can do that.
@@ -211,13 +212,13 @@ headers::
                         error_description='Server is down')
 
 Encoding values
----------------
+===============
 
 Flask-JSON supports encoding for several types out of the box and also provides
 few ways to extend it.
 
 Iterables
-^^^^^^^^^
+---------
 
 Any iterable type will be converted to list value::
 
@@ -234,7 +235,7 @@ Any iterable type will be converted to list value::
     # {status=200, items=[1, 2, 3]}
 
 Time values
-^^^^^^^^^^^
+-----------
 
 :class:`~datetime.datetime`, :class:`~datetime.date` and :class:`~datetime.time`
 will be converted to ISO 8601 or custom format depending on configuration::
@@ -252,7 +253,7 @@ will be converted to ISO 8601 or custom format depending on configuration::
 :ref:`JSON_*_FORMAT <opt_fmt_datetime>` options allows to change result format.
 
 Translation strings
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 `speaklater's <https://pypi.python.org/pypi/speaklater>`_ ``_LazyString``
 is used by `Flask-Babel <https://pythonhosted.org/Flask-Babel/>`_ and
@@ -266,7 +267,7 @@ string with translation::
 
 
 Custom types
-^^^^^^^^^^^^
+------------
 
 To encode custom types you can implement special methods
 ``__json__()`` or ``for_json()``::
@@ -305,7 +306,7 @@ decorator::
 
 
 Encoding order
-^^^^^^^^^^^^^^
+--------------
 
 Flask-JSON calls encoders in the following order:
 
@@ -322,7 +323,7 @@ Flask-JSON calls encoders in the following order:
 * Flask encoders.
 
 Errors handing
---------------
+==============
 
 Flask-JSON allows you to change default behaviour related to errors handing
 by using the following decorators:
@@ -356,7 +357,7 @@ allows to handle :class:`.JsonError` exceptions::
         return json_response(401, text='Something wrong.')
 
 Testing
--------
+=======
 
 Flask-JSON also may help in testing of your JSON API calls. It replaces
 Flask's :class:`~flask.Response` class with custom one if ``TESTING`` config
@@ -372,7 +373,7 @@ Here is example test project:
 .. _config:
 
 Configuration
--------------
+=============
 
 You can configure Flask-JSON with the following options:
 
@@ -461,7 +462,7 @@ formats.
 
 
 API
----
+===
 
 This section describes Flask-JSON functions and classes.
 
@@ -481,7 +482,7 @@ This section describes Flask-JSON functions and classes.
     :special-members: __init__
 
 Low-Level API
-^^^^^^^^^^^^^
+-------------
 
 .. autoclass:: flask_json.JsonRequest
     :members:
