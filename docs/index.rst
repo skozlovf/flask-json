@@ -12,6 +12,10 @@ It helps to handle JSON-based requests and provides the following features:
   responses.
 * Extended JSON encoding support (see :ref:`encoding`).
 
+.. contents::
+    :local:
+    :backlinks: none
+
 Installation
 ------------
 
@@ -24,15 +28,61 @@ or::
     $ pip install Flask-JSON
 
 
-Usage
------
+Initialization
+--------------
 
-Next example illustrates basic features:
+Before using Flask-JSON features you have to create
+:class:`~flask_json.FlaskJSON` instance and initialize it with the Flask
+application instance. As with common Flask extension there are two ways.
+
+First way is to initialize the extension on construction::
+
+    app = Flask(__name__)
+    json = FlaskJSON(app)
+
+Another way is to postpone initialization and pass Flask application to the
+``init_app()`` method::
+
+    app = Flask(__name__)
+    json = FlaskJSON()
+    ...
+    json.init_app(app)
+
+Flask-JSON provides few decorators and you can use them before and after
+initialization::
+
+    # Use decorator before initialization.
+    json = FlaskJSON()
+
+    @json.encoder
+    def custom_encoder(o):
+        pass
+
+    json.init_app(app)
+
+::
+
+    # Use decorator after initialization.
+    json = FlaskJSON(app)
+
+    @json.encoder
+    def custom_encoder(o):
+        pass
+
+Basic usage
+-----------
+
+This section provides simple examples of usage with minimum comments just to
+demonstrate basic features. Next sections describes features more detailed.
+
+First example shows how to use :func:`~flask_json.json_response`,
+:func:`@as_json <flask_json.as_json>` and :class:`~flask_json.JsonError` to
+create JSON responses:
 
 .. literalinclude:: ../examples/example2.py
    :language: python
 
-Example requests::
+Example responses::
 
     $ curl http://localhost:5000/get_time
     {"status": 200, "time": "2015-04-14T08:44:13.973000"}
@@ -77,17 +127,96 @@ There are few examples available on
 `GitHub <https://github.com/skozlovf/flask-json/tree/master/examples>`_.
 
 You also may take a look at
-`tests <https://github.com/skozlovf/flask-json/tree/master/test_json.py>`_.
+`tests <https://github.com/skozlovf/flask-json/tree/master/tests>`_.
 
 .. _encoding:
+
+Creating JSON responses
+-----------------------
+
+The main purpose of the Flask-JSON extension is to provide a convenient tool
+for creating JSON responses. This section describes how you can do that.
+
+Most important function to build JSON response is
+:func:`~flask_json.json_response`. All other response related features uses it.
+
+With :func:`~flask_json.json_response` you can:
+
+* Create JSON response by passing keyword arguments::
+
+    json_response(server_name='norris', available=True)
+
+* Specify HTTP status code for response::
+
+    json_response(status_=400, server_name='norris', available=True)
+
+* Specify custom HTTP headers for response::
+
+    json_response(server_name='norris', headers_={'X-STATUS': 'ok'})
+
+
+By default :func:`~flask_json.json_response` adds HTTP status code to the
+response JSON::
+
+    {"status": 200, "server_name": "norris"}
+
+but you can disable this or change status field name (see :ref:`config` for
+more info).
+
+Another way is to wrap a view with :func:`@as_json <flask_json.as_json>`
+decorator and return json content::
+
+    json = FlaskJSON(app)
+    ...
+
+    @json.as_json
+    def my_view():
+        return dict(server_name="norris")
+
+The decorator calls :func:`~flask_json.json_response` internally and provides
+the same features. You also can return HTTP status and headers::
+
+    @json.as_json
+    def my_view():
+        return dict(server_name="norris"), 401, dict(MYHEADER=12)
+
+:func:`@as_json <flask_json.as_json>` expects the following return values::
+
+    @json.as_json
+    def my_view():
+        return json_content
+        # or
+        return json_content, http_status
+        # or
+        return json_content, custom_headers
+        # or
+        return json_content, http_status, custom_headers
+        # or
+        return json_content, custom_headers, http_status
+
+And one more way is to raise :class:`~flask_json.JsonError`::
+
+    def my_view():
+        raise JsonError(error_description='Server is down')
+
+It will generate HTTP 400 response with JSON payload.
+
+:class:`~flask_json.JsonError`'s constructor has the same signature as
+:func:`~flask_json.json_response` so you can force HTTP status and pass custom
+headers::
+
+    def my_view():
+        raise JsonError(status_=401,
+                        headers_=dict(MYHEADER=12, HEADER2='fail'),
+                        error_description='Server is down')
 
 Encoding values
 ---------------
 
 Flask-JSON supports encoding for several types out of the box and also provides
-few ways to extend encoding.
+few ways to extend it.
 
-iterables
+Iterables
 ^^^^^^^^^
 
 Any iterable type will be converted to list value::
@@ -104,7 +233,7 @@ Any iterable type will be converted to list value::
     json_response(lst=iter([1, 2, 3]))
     # {status=200, items=[1, 2, 3]}
 
-time values
+Time values
 ^^^^^^^^^^^
 
 :class:`~datetime.datetime`, :class:`~datetime.date` and :class:`~datetime.time`
@@ -120,10 +249,9 @@ will be converted to ISO 8601 or custom format depending on configuration::
     #   "time": "12:34:56"
     # }
 
-``JSON_*_FORMAT`` options allows to change result format.
+:ref:`JSON_*_FORMAT <opt_fmt_datetime>` options allows to change result format.
 
-
-translation strings
+Translation strings
 ^^^^^^^^^^^^^^^^^^^
 
 `speaklater's <https://pypi.python.org/pypi/speaklater>`_ ``_LazyString``
@@ -137,31 +265,44 @@ string with translation::
     # {status=200, item='<translation>'}
 
 
-custom objects
-^^^^^^^^^^^^^^
+Custom types
+^^^^^^^^^^^^
 
-To encode custom objects you can use
-:meth:`@encoder <flask_json.FlaskJSON.encoder>` or implement special methods:
+To encode custom types you can implement special methods
 ``__json__()`` or ``for_json()``::
 
     class MyJsonItem(object):
         def __json__(self):
             return '<__json__>'
 
-    json_response(item=MyJsonItem())
-    # {status=200, item='<__json__>'}
+    def view():
+        return json_response(item=MyJsonItem())
+        # {status=200, item='<__json__>'}
 
-or::
+::
 
     class MyJsonItem(object):
         def for_json(self):
             return '<for_json>'
 
-    json_response(item=MyJsonItem())
-    # {status=200, item='<for_json>'}
+    def view():
+        return json_response(item=MyJsonItem())
+        # {status=200, item='<for_json>'}
 
 .. note:: To enable this approach you have to set
     :ref:`JSON_USE_ENCODE_METHODS <opt_use_enc_methods>` to ``True``.
+
+Another way is to use :meth:`@encoder <flask_json.FlaskJSON.encoder>`
+decorator::
+
+    @json.encoder
+    def encoder(o):
+        if isinstance(o, MyClass):
+            return o.to_string()
+
+    def view():
+        return json_response(value=MyClass())
+
 
 Encoding order
 ^^^^^^^^^^^^^^
@@ -179,6 +320,56 @@ Flask-JSON calls encoders in the following order:
     * ``__json__()`` method
     * ``for_json()`` method
 * Flask encoders.
+
+Errors handing
+--------------
+
+Flask-JSON allows you to change default behaviour related to errors handing
+by using the following decorators:
+
+:meth:`@invalid_json_error <flask_json.FlaskJSON.invalid_json_error>` - allows
+to handle invalid JSON requests::
+
+    json = FlaskJSON(app)
+    ...
+
+    @json.invalid_json_error
+    def handler(e):
+        # e - original exception.
+        raise SomeThing
+    ...
+
+    def view():
+        # This call runs handler() on invalid JSON.
+        data = request.get_json()
+        ...
+
+:meth:`@error_handler <flask_json.FlaskJSON.error_handler>` -
+allows to handle :class:`.JsonError` exceptions::
+
+    json = FlaskJSON(app)
+    ...
+
+    @json.error_handler
+    def error_handler(e):
+        # e - JsonError.
+        return json_response(401, text='Something wrong.')
+
+Testing
+-------
+
+Flask-JSON also may help in testing of your JSON API calls. It replaces
+Flask's :class:`~flask.Response` class with custom one if ``TESTING`` config
+flag is enabled.
+
+With Flask-JSON response class :class:`~flask_json.JsonTestResponse` you can
+use :attr:`~flask_json.JsonTestResponse.json` attribute.
+Here is example test project:
+
+.. literalinclude:: ../examples/example_test.py
+   :language: python
+
+.. _config:
 
 Configuration
 -------------
@@ -268,69 +459,6 @@ You can configure Flask-JSON with the following options:
 See :ref:`python:strftime-strptime-behavior` for more info about time related
 formats.
 
-Testing
--------
-
-Flask-JSON also may help in testing your JSON API calls. It replaces
-Flask's :class:`~flask.Response` class with custom one if ``TESTING`` config
-flag is enabled.
-
-With Flask-JSON response class :class:`~flask_json.JsonTestResponse` you can
-use :attr:`~flask_json.JsonTestResponse.json` attribute.
-Here is example test project:
-
-.. literalinclude:: ../examples/example_test.py
-   :language: python
-
-
-Decorators
-----------
-
-In addition to configuration options Flask-JSON allows you to change default
-behaviour with decorators:
-
-:meth:`@invalid_json_error <flask_json.FlaskJSON.invalid_json_error>` - allows
-to handle invalid JSON requests::
-
-    json = FlaskJSON(app)
-    ...
-
-    @json.invalid_json_error
-    def handler(e):
-        # e - original exception.
-        raise SomeThing
-    ...
-
-    def view():
-        # This call runs handler() on invalid JSON.
-        data = request.get_json()
-        ...
-
-:meth:`@error_handler <flask_json.FlaskJSON.error_handler>` -
-allows to handle :class:`.JsonError` exceptions::
-
-    json = FlaskJSON(app)
-    ...
-
-    @json.error_handler
-    def error_handler(e):
-        # e - JsonError.
-        return json_response(401, text='Something wrong.')
-
-:meth:`@encoder <flask_json.FlaskJSON.encoder>` -  allows to extend JSON
-encoder with custom types::
-
-    json = FlaskJSON(app)
-    ...
-
-    @json.encoder
-    def encoder(o):
-        if isinstance(o, MyClass):
-            return o.to_string()
-    ...
-
-    def view():
-        return json_response(value=MyClass())
 
 API
 ---
