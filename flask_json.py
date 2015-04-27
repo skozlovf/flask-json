@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
 from flask import current_app, jsonify, Request, Response
 from flask import json
 
-__version__ = '0.0.1'
+__version__ = '0.1'
 
 text_type = unicode if sys.version_info[0] == 2 else str
 
