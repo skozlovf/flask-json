@@ -195,7 +195,29 @@ the same features. You also can return HTTP status and headers::
         # or
         return json_content, custom_headers, http_status
 
-And one more way is to raise :class:`~flask_json.JsonError`::
+``json_content`` may be ``None``, in such situation empty JSON response
+will be generated::
+
+    @as_json
+    def my_view():
+        do_some_stuff()
+
+::
+
+    @as_json
+    def my_view():
+        do_some_stuff()
+        return None, 400  # same as {}, 400
+
+If you return already created JSON response then it will be used as is::
+
+    @as_json
+    def my_view():
+        do_some_stuff()
+        return json_response(some=value)
+
+And one more way to create JSON response is to raise
+:class:`~flask_json.JsonError`::
 
     def my_view():
         raise JsonError(error_description='Server is down')
