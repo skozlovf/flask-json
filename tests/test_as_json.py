@@ -2,7 +2,13 @@
 This module provides tests for @as_json() decorator.
 """
 from .common import *
-from flask_json import _normalize_view_tuple, as_json, JsonTestResponse
+from flask import Response
+from flask_json import (
+    json_response,
+    _normalize_view_tuple,
+    as_json,
+    JsonTestResponse
+)
 
 
 class TestAsJson(CommonTest):
@@ -113,6 +119,87 @@ class TestAsJson(CommonTest):
         assert_equals(r.headers.get('Content-Type'), 'application/json')
         assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY'), 'hdr')
+
+    # Test: None payload.
+    def test_none_single(self):
+        @as_json
+        def view1():
+            return None
+
+        r = view1()
+        assert_equals(r.status_code, 200)
+        assert_dict_equal(r.json, {'status': 200})
+        assert_equals(r.headers.get('Content-Type'), 'application/json')
+
+    # Test: None payload + status.
+    def test_none_with_status(self):
+        @as_json
+        def view1():
+            return None, 400
+
+        r = view1()
+        assert_equals(r.status_code, 400)
+        assert_dict_equal(r.json, {'status': 400})
+
+    # Test: None payload + headers.
+    def test_none_with_headers(self):
+        @as_json
+        def view():
+            return None, dict(MY='hdr')
+
+        r = view()
+        assert_equals(r.status_code, 200)
+        assert_dict_equal(r.json, {'status': 200})
+        assert_equals(r.headers.get('Content-Type'), 'application/json')
+        assert_true(r.headers.get('Content-Length', type=int) > 0)
+        assert_equals(r.headers.get('MY'), 'hdr')
+
+    # Test: None payload + status + headers.
+    def test_none_with_status_headers(self):
+        @as_json
+        def view():
+            return None, 400, dict(MY='hdr')
+
+        r = view()
+        assert_equals(r.status_code, 400)
+        assert_dict_equal(r.json, {'status': 400})
+        assert_equals(r.headers.get('Content-Type'), 'application/json')
+        assert_true(r.headers.get('Content-Length', type=int) > 0)
+        assert_equals(r.headers.get('MY'), 'hdr')
+
+    # Test: None payload + headers + status.
+    def test_none_with_headers_status(self):
+        @as_json
+        def view():
+            return None, dict(MY='hdr'), 401
+
+        r = view()
+        assert_equals(r.status_code, 401)
+        assert_dict_equal(r.json, {'status': 401})
+        assert_equals(r.headers.get('Content-Type'), 'application/json')
+        assert_true(r.headers.get('Content-Length', type=int) > 0)
+        assert_equals(r.headers.get('MY'), 'hdr')
+
+    # Test: if a view returns Flask response.
+    # It must fail because we accept only JSON response in @as_json.
+    @raises(AssertionError)
+    def test_with_response(self):
+        @as_json
+        def view():
+            return Response()
+
+        r = view()
+
+    # Test: if a view returns json_response().
+    def test_with_json_response(self):
+        @as_json
+        def view():
+            return json_response(val=12)
+
+        r = view()
+        assert_equals(r.status_code, 200)
+        assert_equals(r.headers.get('Content-Type'), 'application/json')
+        assert_dict_equal(r.json, {'status': 200, 'val': 12})
 
     # Test invalid return value.
     # See also comments for _normalize_view_tuple().

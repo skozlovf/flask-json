@@ -119,9 +119,13 @@ def as_json(f):
     """This decorator converts view's return value to JSON response.
 
     The decorator expects the following return values:
-        * a dict with JSON content;
-        * a tuple of (dict, status) or (dict, headers) or
-          (dict, status, headers) or (dict, headers, status).
+        * Flask :class:`~flask.Response` instance (see note bellow);
+        * a ``dict`` with JSON content;
+        * a tuple of ``(dict, status)`` or ``(dict, headers)`` or
+          ``(dict, status, headers)`` or ``(dict, headers, status)``.
+
+    Instead of ``dict`` you may pass ``None`` and it will be treated as empty
+    JSON (same as ``dict()`` or ``{}``).
 
     In all other cases it raises an error.
 
@@ -137,6 +141,12 @@ def as_json(f):
         def view_comp():
             return dict(param=value, param2=value2), 400
 
+    Note:
+        If wrapped view returns Flask :class:`~flask.Response` then it will be
+        used as is without passing to :func:`.json_response`. But the response
+        must be a JSON response (mimetype must contain ``application/json``),
+        otherwise ``AssertionError`` will be raised.
+
     Returns:
         flask.Response: Response with the JSON content.
 
@@ -149,11 +159,17 @@ def as_json(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         rv = f(*args, **kwargs)
-        if isinstance(rv, dict):
+        if rv is None:
+            return json_response()
+        elif isinstance(rv, dict):
             return json_response(**rv)
+        elif isinstance(rv, Response):
+            assert 'application/json' in rv.mimetype
+            return rv
         elif isinstance(rv, tuple):
             d, status, headers = _normalize_view_tuple(rv)
-            return json_response(status_=status or 200, headers_=headers, **d)
+            return json_response(status_=status or 200, headers_=headers,
+                                 **(d or dict()))
         else:
             raise ValueError('Unsupported return value.')
     return wrapper
