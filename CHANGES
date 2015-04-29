@@ -1,6 +1,12 @@
 Flask-JSON Changelog
 ====================
 
+0.1.1
+-----
+
+* Support ``None`` and response instances in ``@as_json``.
+* Fix ``@as_json`` documentation.
+
 0.1
 ---
 
