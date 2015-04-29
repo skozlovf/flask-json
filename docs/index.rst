@@ -167,23 +167,23 @@ more info).
 Another way is to wrap a view with :func:`@as_json <flask_json.as_json>`
 decorator and return json content::
 
-    json = FlaskJSON(app)
+    FlaskJSON(app)
     ...
 
-    @json.as_json
+    @as_json
     def my_view():
         return dict(server_name="norris")
 
 The decorator calls :func:`~flask_json.json_response` internally and provides
 the same features. You also can return HTTP status and headers::
 
-    @json.as_json
+    @as_json
     def my_view():
         return dict(server_name="norris"), 401, dict(MYHEADER=12)
 
 :func:`@as_json <flask_json.as_json>` expects the following return values::
 
-    @json.as_json
+    @as_json
     def my_view():
         return json_content
         # or
