@@ -16,7 +16,7 @@ try:
 # Don't cover since simulated in test_encoder_nospeaklater().
 except ImportError:  # pragma: no cover
     _LazyString = None
-from flask import current_app, jsonify, Request, Response
+from flask import current_app, jsonify, request, Request, Response
 from flask import json
 
 __version__ = '0.2.0'
@@ -160,18 +160,28 @@ def as_json(f):
     def wrapper(*args, **kwargs):
         rv = f(*args, **kwargs)
         if rv is None:
-            return json_response()
+            response = json_response()
         elif isinstance(rv, dict):
-            return json_response(**rv)
+            response = json_response(**rv)
         elif isinstance(rv, Response):
             assert 'application/json' in rv.mimetype
-            return rv
+            response = rv
         elif isinstance(rv, tuple):
             d, status, headers = _normalize_view_tuple(rv)
-            return json_response(status_=status or 200, headers_=headers,
+            response = json_response(status_=status or 200, headers_=headers,
                                  **(d or dict()))
         else:
             raise ValueError('Unsupported return value.')
+
+        callback = request.args.get("callback", "")
+        if(callback):
+            # JSONP response
+            response.status_code = 200
+            response.headers['Content-Type'] = "application/javascript"
+            response.data = "%s(%s);" % (callback, response.data)
+
+        return response
+
     return wrapper
 
 
