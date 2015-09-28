@@ -115,6 +115,24 @@ def _normalize_view_tuple(tuple_):
     return v if isinstance(v[1], int) else (v[0], v[2], v[1])
 
 
+# Helper function to create JSON response for the given data.
+# Raises an error if the data is not convertible to JSON.
+def _build_response(data):
+    if data is None:
+        return json_response()
+    elif isinstance(data, dict):
+        return json_response(**data)
+    elif isinstance(data, Response):
+        assert 'application/json' in data.mimetype
+        return data
+    elif isinstance(data, tuple):
+        d, status, headers = _normalize_view_tuple(data)
+        return json_response(status_=status or 200, headers_=headers,
+                             **(d or dict()))
+    else:
+        raise ValueError('Unsupported return value.')
+
+
 def as_json(f):
     """This decorator converts view's return value to JSON response.
 
@@ -159,19 +177,7 @@ def as_json(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         rv = f(*args, **kwargs)
-        if rv is None:
-            response = json_response()
-        elif isinstance(rv, dict):
-            response = json_response(**rv)
-        elif isinstance(rv, Response):
-            assert 'application/json' in rv.mimetype
-            response = rv
-        elif isinstance(rv, tuple):
-            d, status, headers = _normalize_view_tuple(rv)
-            response = json_response(status_=status or 200, headers_=headers,
-                                     **(d or dict()))
-        else:
-            raise ValueError('Unsupported return value.')
+        response = _build_response(rv)
 
         callback = request.args.get('callback', '')
         if callback:
