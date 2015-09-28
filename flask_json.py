@@ -169,16 +169,16 @@ def as_json(f):
         elif isinstance(rv, tuple):
             d, status, headers = _normalize_view_tuple(rv)
             response = json_response(status_=status or 200, headers_=headers,
-                                 **(d or dict()))
+                                     **(d or dict()))
         else:
             raise ValueError('Unsupported return value.')
 
-        callback = request.args.get("callback", "")
-        if(callback):
+        callback = request.args.get('callback', '')
+        if callback:
             # JSONP response
             response.status_code = 200
-            response.headers['Content-Type'] = "application/javascript"
-            response.data = "%s(%s);" % (callback, response.data)
+            response.headers['Content-Type'] = 'application/javascript'
+            response.data = '%s(%s);' % (callback, response.data)
 
         return response
 
