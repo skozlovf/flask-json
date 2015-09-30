@@ -16,12 +16,23 @@ try:
 # Don't cover since simulated in test_encoder_nospeaklater().
 except ImportError:  # pragma: no cover
     _LazyString = None
+from werkzeug.exceptions import BadRequest
 from flask import current_app, jsonify, request, Request, Response
 from flask import json
 
 __version__ = '0.2.0'
 
-text_type = unicode if sys.version_info[0] == 2 else str
+
+if sys.version_info[0] == 2:
+    text_type = unicode
+
+    def _is_str(value):
+        return isinstance(value, str) or isinstance(value, unicode)
+else:
+    text_type = str
+
+    def _is_str(value):
+        return isinstance(value, str)
 
 
 def json_response(status_=200, headers_=None, **kwargs):
@@ -177,18 +188,58 @@ def as_json(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         rv = f(*args, **kwargs)
-        response = _build_response(rv)
-
-        callback = request.args.get('callback', '')
-        if callback:
-            # JSONP response
-            response.status_code = 200
-            response.headers['Content-Type'] = 'application/javascript'
-            response.data = '%s(%s);' % (callback, response.data)
-
-        return response
+        return _build_response(rv)
 
     return wrapper
+
+
+# Helper function to handle JSONP response.
+# It used in the as_json_p decorator.
+def _json_p_handler(rv, callbacks, optional):
+    callback = None
+    for k in callbacks:
+        if k in request.args:
+            callback = request.args.get(k)
+            break
+
+    if callback is None:
+        if optional:
+            return _build_response(rv)
+        else:
+            raise BadRequest('Missing JSONP callback parameter.')
+
+    if _is_str(rv):
+        data = '"%s"' % rv
+    else:
+        data = _build_response(rv).get_data(as_text=True)
+
+    data = text_type('%s(%s);') % (callback, data)
+    response = current_app.response_class(
+        data, status=200, content_type='application/javascript')
+    return response
+
+
+def as_json_p(f=None, **kwargs):
+    optional = kwargs.get(
+        'optional', current_app.config['JSON_JSONP_OPTIONAL'])
+    callbacks = kwargs.get(
+        'callbacks', current_app.config['JSON_JSONP_QUERY_CALLBACKS'])
+
+    if f is None:
+        def deco(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                rv = func(*args, **kwargs)
+                return _json_p_handler(rv, callbacks, optional)
+            return wrapper
+        return deco
+
+    else:
+        @wraps(f)
+        def wrapper2(*args, **kwargs):
+            rv = f(*args, **kwargs)
+            return _json_p_handler(rv, callbacks, optional)
+        return wrapper2
 
 
 # TODO: maybe subclass from HTTPException?
@@ -359,6 +410,9 @@ class FlaskJSON(object):
         app.config.setdefault('JSON_ADD_STATUS', True)
         app.config.setdefault('JSON_STATUS_FIELD_NAME', 'status')
         app.config.setdefault('JSON_DECODE_ERROR_MESSAGE', 'Not a JSON.')
+        app.config.setdefault('JSON_JSONP_OPTIONAL', True)
+        app.config.setdefault('JSON_JSONP_QUERY_CALLBACKS',
+                              ['callback', 'jsonp'])
 
         if not hasattr(app, 'extensions'):
             app.extensions = dict()
