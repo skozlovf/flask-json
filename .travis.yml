@@ -11,7 +11,7 @@ env:
   - FLASK=0.10.1 speaklater
 install:
   - pip install Flask==$FLASK
-  - pip install flake8
+  - pip install pep8
 before_script:
- - flake8 flask_json.py
+ - pep8 flask_json.py
 script: nosetests
