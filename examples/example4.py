@@ -28,5 +28,25 @@ def message(text):
     return text
 
 
+@app.route('/show_quoted')
+def show_quoted():
+    return """
+    <!DOCTYPE html>
+    <html>
+        <body>
+            <script type="application/javascript"
+                    src="%squote_message?callback=alert">
+            </script>
+        </body>
+    </html>
+    """ % request.host_url
+
+
+@app.route('/quote_message')
+@as_json_p
+def quote_message():
+    return 'Hello, "Sam".'
+
+
 if __name__ == '__main__':
     app.run()
