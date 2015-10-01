@@ -80,4 +80,5 @@ Documentation
 -------------
 
 Documentation is available on `pythonhosted
-<http://pythonhosted.org//Flask-JSON/>`_.
+<http://pythonhosted.org//Flask-JSON/>`_
+and `Read the Docs <http://flask-json.readthedocs.org>`_.
