@@ -16,9 +16,9 @@ class TestAsJsonP(CommonTest):
         self.app.config['JSON_ADD_STATUS'] = False
 
         # Initial config for the @as_json_p
-        self.app.config.setdefault('JSON_JSONP_OPTIONAL', True)
-        self.app.config.setdefault('JSON_JSONP_QUERY_CALLBACKS',
-                                   ['callback', 'jsonp'])
+        self.app.config['JSON_JSONP_STRING_QUOTES'] = True
+        self.app.config['JSON_JSONP_OPTIONAL'] = True
+        self.app.config['JSON_JSONP_QUERY_CALLBACKS'] = ['callback', 'jsonp']
 
     # Helper method to make a request.
     def req(self, *args, **kwargs):
@@ -29,33 +29,74 @@ class TestAsJsonP(CommonTest):
     @raises(BadRequest)
     def test_handler_missing_callback_required(self):
         with self.req('/?param=1'):
-            _json_p_handler('x', ['callback', 'foo'], False)
+            _json_p_handler('x', callbacks=['callback', 'foo'], optional=False)
 
     # Test: optional callback in the URL query.
     # It must return regular response if callback name is not provided.
     def test_handler_missing_callback_optional(self):
         with self.req('/?param=1'):
-            rv = _json_p_handler({'x': 1}, ['callback', 'foo'], True)
+            rv = _json_p_handler({'x': 1},
+                                 callbacks=['callback', 'foo'], optional=True)
             assert_is_instance(rv, Response)
             assert_equals(rv.get_data(as_text=True), '{"x": 1}')
 
     # Test: if we pass a text then it must return it as is.
-    def test_handler_text(self):
+    def test_handler_text_no_quotes(self):
         with self.req('/?callback=foo'):
-            r = _json_p_handler(str('hello'), ['callback'], False)
+            r = _json_p_handler(str('hello'),
+                                callbacks=['callback'], optional=False,
+                                add_quotes=False)
+            assert_equals(r.get_data(as_text=True), 'foo(hello);')
+            assert_equals(r.status_code, 200)
+            assert_equals(r.headers['Content-Type'], 'application/javascript')
+            # For py 2.x we also test unicode string.
+            if sys.version_info[0] == 2:
+                r = _json_p_handler(unicode('hello'),
+                                    callbacks=['callback'], optional=False,
+                                    add_quotes=False)
+                assert_equals(r.get_data(as_text=True), 'foo(hello);')
+
+    # Test: if we pass a text then it must return quoted string.
+    def test_handler_text_quotes(self):
+        with self.req('/?callback=foo'):
+            r = _json_p_handler(str('hello'), optional=False, add_quotes=True)
             assert_equals(r.get_data(as_text=True), 'foo("hello");')
             assert_equals(r.status_code, 200)
             assert_equals(r.headers['Content-Type'], 'application/javascript')
             # For py 2.x we also test unicode string.
             if sys.version_info[0] == 2:
-                r = _json_p_handler(unicode('hello'), ['callback'], False)
+                r = _json_p_handler(unicode('hello'),
+                                    callbacks=['callback'], optional=False,
+                                    add_quotes=True)
+                assert_equals(r.get_data(as_text=True), 'foo("hello");')
+
+    # Test: text with quotes.
+    def test_handler_text_quotes2(self):
+        with self.req('/?callback=foo'):
+            r = _json_p_handler(str('hello "Sam"'), add_quotes=True)
+            assert_equals(r.get_data(as_text=True), r'foo("hello \"Sam\"");')
+            assert_equals(r.status_code, 200)
+            assert_equals(r.headers['Content-Type'], 'application/javascript')
+
+    # Test: same as above but used configuration instead of kwarg,
+    # it adds quotes by default.
+    def test_handler_text_default(self):
+        with self.req('/?callback=foo'):
+            r = _json_p_handler(str('hello'))
+            assert_equals(r.get_data(as_text=True), 'foo("hello");')
+            assert_equals(r.status_code, 200)
+            assert_equals(r.headers['Content-Type'], 'application/javascript')
+            # For py 2.x we also test unicode string.
+            if sys.version_info[0] == 2:
+                r = _json_p_handler(unicode('hello'), callbacks=['callback'],
+                                    optional=False)
                 assert_equals(r.get_data(as_text=True), 'foo("hello");')
 
     # Test: pass json response.
     def test_handler_json(self):
         with self.req('/?callback=foo'):
             r = json_response(val=100)
-            val = _json_p_handler(r, ['callback'], False)
+            val = _json_p_handler(r, callbacks=['callback'], optional=False)
 
             assert_equals(val.get_data(as_text=True), 'foo({"val": 100});')
             assert_equals(val.status_code, 200)
