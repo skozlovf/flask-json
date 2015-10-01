@@ -228,9 +228,64 @@ def _json_p_handler(rv, callbacks=None, optional=None, add_quotes=None):
     return response
 
 
+# TODO: don't add status field.
 def as_json_p(f=None, callbacks=None, optional=None, add_quotes=None):
+    """This decorator acts like :func:`@as_json <flask_json.as_json>` but
+    also handles JSONP requests; expects string or any
+    :func:`@as_json <flask_json.as_json>` supported return value.
 
+    It may be used in two forms:
 
+    * Without parameters - then global configuration will be applied::
+
+          @as_json_p
+          def view():
+              ...
+
+    * With parameters - then they will have priority over global ones for the
+      given view::
+
+          @as_json_p(...)
+          def view():
+              ...
+
+    Strings may be surrounded with quotes depending on configuration
+    (``add_quotes`` or :ref:`JSON_JSONP_STRING_QUOTES <opt_jsonp_quotes>`)::
+
+        ...
+        @as_json_p
+        def view():
+            return 'str'
+
+        app.config['JSON_JSONP_STRING_QUOTES'] = False
+        # view() ->  callback(str);
+
+        app.config['JSON_JSONP_STRING_QUOTES'] = True
+        # view() ->  callback("str");
+
+    Args:
+        callbacks: List of acceptable callbacks.
+        optional: Make JSONP optional. If no callback is passed then fallback
+            to JSON response.
+        add_quotes: If view returns a string then surround it with extra
+            quotes.
+
+    Returns:
+        flask.Response: JSONP response with javascript function call.
+
+    Raises:
+        ValueError: if return value is not supported.
+        BadRequest: if callback is missing in URL query
+            (if ``optional=False``).
+
+    See Also:
+        :func:`.json_response`,
+        :func:`@as_json <flask_json.as_json>`.
+
+        :ref:`JSON_JSONP_STRING_QUOTES <opt_jsonp_quotes>`,
+        :ref:`JSON_JSONP_OPTIONAL <opt_jsonp_optional>`,
+        :ref:`JSON_JSONP_QUERY_CALLBACKS <opt_jsonp_callbacks>`.
+    """
     if f is None:
         def deco(func):
             @wraps(func)
