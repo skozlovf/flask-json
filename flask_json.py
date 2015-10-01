@@ -195,10 +195,12 @@ def as_json(f):
 
 # Helper function to handle JSONP response.
 # Used in the @as_json_p decorator.
-def _json_p_handler(rv, callbacks=None, optional=None):
+def _json_p_handler(rv, callbacks=None, optional=None, add_quotes=None):
     callbacks = callbacks or current_app.config['JSON_JSONP_QUERY_CALLBACKS']
     if optional is None:
         optional = current_app.config['JSON_JSONP_OPTIONAL']
+    if add_quotes is None:
+        add_quotes = current_app.config['JSON_JSONP_STRING_QUOTES']
 
     callback = None
     for k in callbacks:
@@ -213,7 +215,10 @@ def _json_p_handler(rv, callbacks=None, optional=None):
             raise BadRequest('Missing JSONP callback parameter.')
 
     if _is_str(rv):
-        data = '"%s"' % rv
+        if add_quotes:
+            data = '"%s"' % rv.replace('"', '\\"')
+        else:
+            data = '%s' % rv
     else:
         data = _build_response(rv).get_data(as_text=True)
 
@@ -223,7 +228,7 @@ def _json_p_handler(rv, callbacks=None, optional=None):
     return response
 
 
-def as_json_p(f=None, callbacks=None, optional=None):
+def as_json_p(f=None, callbacks=None, optional=None, add_quotes=None):
 
 
     if f is None:
@@ -231,7 +236,7 @@ def as_json_p(f=None, callbacks=None, optional=None):
             @wraps(func)
             def wrapper(*args, **kw):
                 rv = func(*args, **kw)
-                return _json_p_handler(rv, callbacks, optional)
+                return _json_p_handler(rv, callbacks, optional, add_quotes)
             return wrapper
         return deco
 
@@ -239,7 +244,7 @@ def as_json_p(f=None, callbacks=None, optional=None):
         @wraps(f)
         def wrapper2(*args, **kw):
             rv = f(*args, **kw)
-            return _json_p_handler(rv, callbacks, optional)
+            return _json_p_handler(rv, callbacks, optional, add_quotes)
         return wrapper2
 
 
@@ -411,6 +416,8 @@ class FlaskJSON(object):
         app.config.setdefault('JSON_ADD_STATUS', True)
         app.config.setdefault('JSON_STATUS_FIELD_NAME', 'status')
         app.config.setdefault('JSON_DECODE_ERROR_MESSAGE', 'Not a JSON.')
+
+        app.config.setdefault('JSON_JSONP_STRING_QUOTES', True)
         app.config.setdefault('JSON_JSONP_OPTIONAL', True)
         app.config.setdefault('JSON_JSONP_QUERY_CALLBACKS',
                               ['callback', 'jsonp'])
