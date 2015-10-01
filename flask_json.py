@@ -276,7 +276,7 @@ def as_json_p(f=None, callbacks=None, optional=None, add_quotes=None):
         they will be discarded.
 
     Args:
-        callbacks: List of acceptable callbacks.
+        callbacks: List of acceptable callback query parameters.
         optional: Make JSONP optional. If no callback is passed then fallback
             to JSON response.
         add_quotes: If view returns a string then surround it with extra

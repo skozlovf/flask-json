@@ -536,7 +536,7 @@ You can configure Flask-JSON with the following options:
 
 ``JSON_JSONP_QUERY_CALLBACKS``  .. _opt_jsonp_callbacks:
 
-                                List of allowed JSONP callbacks.
+                                List of allowed JSONP callback query parameters.
 
                                 Default: ``['callback', 'jsonp']``.
 ==============================  ================================================
