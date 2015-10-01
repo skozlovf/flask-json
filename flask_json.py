@@ -20,7 +20,7 @@ from werkzeug.exceptions import BadRequest
 from flask import current_app, jsonify, request, Request, Response
 from flask import json
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 
 if sys.version_info[0] == 2:
