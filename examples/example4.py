@@ -48,5 +48,11 @@ def quote_message():
     return 'Hello, "Sam".'
 
 
+@app.route('/dict')
+@as_json_p
+def dict():
+    return {'param': 42}
+
+
 if __name__ == '__main__':
     app.run()
