@@ -12,8 +12,9 @@ class TestAsJsonP(CommonTest):
         super(TestAsJsonP, self).setup()
         # Disable pretty print to have smaller result string
         self.app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
-        # We don't need status field here.
-        self.app.config['JSON_ADD_STATUS'] = False
+        # Force status field to test if it will be added to JSONP response.
+        # It must drop status field.
+        self.app.config['JSON_ADD_STATUS'] = True
 
         # Initial config for the @as_json_p
         self.app.config['JSON_JSONP_STRING_QUOTES'] = True
@@ -38,7 +39,7 @@ class TestAsJsonP(CommonTest):
             rv = _json_p_handler({'x': 1},
                                  callbacks=['callback', 'foo'], optional=True)
             assert_is_instance(rv, Response)
-            assert_equals(rv.get_data(as_text=True), '{"x": 1}')
+            assert_equals(rv.json, {'x': 1, 'status': 200})
 
     # Test: if we pass a text then it must return it as is.
     def test_handler_text_no_quotes(self):
@@ -95,7 +96,7 @@ class TestAsJsonP(CommonTest):
     # Test: pass json response.
     def test_handler_json(self):
         with self.req('/?callback=foo'):
-            r = json_response(val=100)
+            r = json_response(val=100, add_status_=False)
             val = _json_p_handler(r, callbacks=['callback'], optional=False)
 
             assert_equals(val.get_data(as_text=True), 'foo({"val": 100});')
@@ -112,7 +113,7 @@ class TestAsJsonP(CommonTest):
             r = view()
             assert_equals(r.status_code, 200)
             assert_equals(r.headers['Content-Type'], 'application/json')
-            assert_dict_equal(r.json, {'val': 1, 'name': 'Sam'})
+            assert_dict_equal(r.json, {'val': 1, 'name': 'Sam', 'status': 200})
 
     # Test: simple usage, with callback.
     def test_simple(self):

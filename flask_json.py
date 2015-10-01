@@ -136,17 +136,18 @@ def _normalize_view_tuple(tuple_):
 
 # Helper function to create JSON response for the given data.
 # Raises an error if the data is not convertible to JSON.
-def _build_response(data):
+def _build_response(data, add_status=None):
     if data is None:
-        return json_response()
+        return json_response(add_status_=add_status)
     elif isinstance(data, dict):
-        return json_response(**data)
+        return json_response(add_status_=add_status, **data)
     elif isinstance(data, Response):
         assert 'application/json' in data.mimetype
         return data
     elif isinstance(data, tuple):
         d, status, headers = _normalize_view_tuple(data)
         return json_response(status_=status or 200, headers_=headers,
+                             add_status_=add_status,
                              **(d or dict()))
     else:
         raise ValueError('Unsupported return value.')
@@ -228,7 +229,7 @@ def _json_p_handler(rv, callbacks=None, optional=None, add_quotes=None):
         else:
             data = '%s' % rv
     else:
-        data = _build_response(rv).get_data(as_text=True)
+        data = _build_response(rv, add_status=False).get_data(as_text=True)
 
     data = text_type('%s(%s);') % (callback, data)
     response = current_app.response_class(
@@ -236,7 +237,6 @@ def _json_p_handler(rv, callbacks=None, optional=None, add_quotes=None):
     return response
 
 
-# TODO: don't add status field.
 def as_json_p(f=None, callbacks=None, optional=None, add_quotes=None):
     """This decorator acts like :func:`@as_json <flask_json.as_json>` but
     also handles JSONP requests; expects string or any
@@ -274,6 +274,7 @@ def as_json_p(f=None, callbacks=None, optional=None, add_quotes=None):
     Note:
         If view returns custom headers or HTTP status then
         they will be discarded.
+        Also HTTP status field will not be passed to the callback.
 
     Args:
         callbacks: List of acceptable callback query parameters.
