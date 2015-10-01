@@ -27,6 +27,16 @@ class TestResponse(CommonTest):
         r = json_response(some='val', data=42)
         assert_dict_equal(r.json, {'some': 'val', 'data': 42})
 
+    # Test: add_status_ param.
+    def test_simple_status_param(self):
+        self.app.config['JSON_ADD_STATUS'] = True
+        r = json_response(some='val', data=42, add_status_=False)
+        assert_dict_equal(r.json, {'some': 'val', 'data': 42})
+
+        self.app.config['JSON_ADD_STATUS'] = False
+        r = json_response(some='val', data=42, add_status_=True)
+        assert_dict_equal(r.json, {'some': 'val', 'data': 42, 'status': 200})
+
     # Test: custom HTTP status field name.
     def test_custom_field_name(self):
         self.app.config['JSON_STATUS_FIELD_NAME'] = 'http_status'

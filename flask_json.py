@@ -35,7 +35,7 @@ else:
         return isinstance(value, str)
 
 
-def json_response(status_=200, headers_=None, **kwargs):
+def json_response(status_=200, headers_=None, add_status_=None, **kwargs):
     """Helper function to build JSON response
     with the given HTTP status and fields(``kwargs``).
 
@@ -94,15 +94,23 @@ def json_response(status_=200, headers_=None, **kwargs):
     Args:
         `status_`: HTTP response status code.
         `headers_`: iterable or dictionary with header values.
+        `add_status_`: Add status field. If not set then
+            :ref:`JSON_ADD_STATUS <opt_add_status>` is used.
         kwargs: keyword arguments to put in result JSON.
 
     Returns:
         flask.Response: Response with the JSON content.
     """
-    if current_app.config['JSON_ADD_STATUS']:
+    if add_status_ is not None:
+        add_status = add_status_
+    else:
+        add_status = current_app.config['JSON_ADD_STATUS']
+
+    if add_status:
         field = current_app.config['JSON_STATUS_FIELD_NAME']
         if field not in kwargs:
             kwargs[field] = status_
+
     response = jsonify(**kwargs)
     response.status_code = status_
 
