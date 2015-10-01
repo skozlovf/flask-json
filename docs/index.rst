@@ -12,6 +12,7 @@ It helps to handle JSON-based requests and provides the following features:
 * :class:`~flask_json.JsonError` - exception to generate JSON error
   responses.
 * Extended JSON encoding support (see :ref:`encoding`).
+* :ref:`JSONP support <jsonp>` with :func:`@as_json_p <flask_json.as_json_p>`.
 
 .. contents::
     :local:
@@ -378,6 +379,46 @@ allows to handle :class:`.JsonError` exceptions::
         # e - JsonError.
         return json_response(401, text='Something wrong.')
 
+.. _jsonp:
+
+JSONP support
+=============
+
+If you want to generate JSONP responses then you can use
+:func:`@as_json_p <flask_json.as_json_p>` decorator.
+
+It expects callback name in the URL query and returns response with
+javascript function call.
+
+Wrapped view must follow the same requirements as for
+:func:`@as_json <flask_json.as_json>`, additionally string value is supported.
+
+Example:
+
+.. literalinclude:: ../examples/example4.py
+   :language: python
+
+Example responses::
+
+    $ curl http://localhost:5000/message/hello?callback=alert
+    alert("hello");
+
+    $ curl http://localhost:5000/quote_message?callback=alert
+    alert("Hello, \"Sam\".");
+
+    $ curl http://localhost:5000/dict?callback=alert
+    alert({
+      "param": 42
+    });
+
+You may change default :func:`@as_json_p <flask_json.as_json_p>` behaviour with
+configurations :ref:`JSON_JSONP_STRING_QUOTES <opt_jsonp_quotes>`,
+:ref:`JSON_JSONP_OPTIONAL <opt_jsonp_optional>` and
+:ref:`JSON_JSONP_QUERY_CALLBACKS <opt_jsonp_callbacks>`.
+
+Also there is a possibility to set configuration for the specific view via
+decorator parameters.
+
 Testing
 =======
 
@@ -399,7 +440,7 @@ Configuration
 
 You can configure Flask-JSON with the following options:
 
-=============================   ================================================
+==============================  ================================================
 ``JSON_ADD_STATUS``             .. _opt_add_status:
 
                                 Put HTTP status field in all JSON responses.
@@ -477,7 +518,28 @@ You can configure Flask-JSON with the following options:
                                 response.
 
                                 Default: ``False``.
-=============================   ================================================
+
+``JSON_JSONP_STRING_QUOTES``    .. _opt_jsonp_quotes:
+
+                                If a view returns a string then surround it
+                                with extra quotes.
+
+                                Default: ``True``.
+
+``JSON_JSONP_OPTIONAL``         .. _opt_jsonp_optional:
+
+                                Make JSONP optional. If no callback is passed
+                                then fallback to JSON response as with
+                                :func:`@as_json <flask_json.as_json>`.
+
+                                Default: ``True``.
+
+``JSON_JSONP_QUERY_CALLBACKS``  .. _opt_jsonp_callbacks:
+
+                                List of allowed JSONP callbacks.
+
+                                Default: ``['callback', 'jsonp']``.
+==============================  ================================================
 
 See :ref:`python:strftime-strptime-behavior` for more info about time related
 formats.
@@ -494,6 +556,8 @@ This section describes Flask-JSON functions and classes.
 .. autofunction:: flask_json.json_response
 
 .. autofunction:: flask_json.as_json
+
+.. autofunction:: flask_json.as_json_p
 
 .. autoclass:: flask_json.JsonError
     :members:
