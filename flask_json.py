@@ -263,6 +263,10 @@ def as_json_p(f=None, callbacks=None, optional=None, add_quotes=None):
         app.config['JSON_JSONP_STRING_QUOTES'] = True
         # view() ->  callback("str");
 
+    Note:
+        If view returns custom headers or HTTP status then
+        they will be discarded.
+
     Args:
         callbacks: List of acceptable callbacks.
         optional: Make JSONP optional. If no callback is passed then fallback
