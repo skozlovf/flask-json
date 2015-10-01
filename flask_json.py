@@ -194,8 +194,12 @@ def as_json(f):
 
 
 # Helper function to handle JSONP response.
-# It used in the as_json_p decorator.
-def _json_p_handler(rv, callbacks, optional):
+# Used in the @as_json_p decorator.
+def _json_p_handler(rv, callbacks=None, optional=None):
+    callbacks = callbacks or current_app.config['JSON_JSONP_QUERY_CALLBACKS']
+    if optional is None:
+        optional = current_app.config['JSON_JSONP_OPTIONAL']
+
     callback = None
     for k in callbacks:
         if k in request.args:
@@ -219,22 +223,14 @@ def _json_p_handler(rv, callbacks, optional):
     return response
 
 
-# Helper function to get as_json_p options.
-def _jsonp_params(**kwargs):
-    callbacks = kwargs.get(
-        'callbacks', current_app.config['JSON_JSONP_QUERY_CALLBACKS'])
-    optional = kwargs.get(
-        'optional', current_app.config['JSON_JSONP_OPTIONAL'])
-    return callbacks, optional
+def as_json_p(f=None, callbacks=None, optional=None):
 
 
-def as_json_p(f=None, **kwargs):
     if f is None:
         def deco(func):
             @wraps(func)
             def wrapper(*args, **kw):
                 rv = func(*args, **kw)
-                callbacks, optional = _jsonp_params(**kwargs)
                 return _json_p_handler(rv, callbacks, optional)
             return wrapper
         return deco
@@ -243,7 +239,6 @@ def as_json_p(f=None, **kwargs):
         @wraps(f)
         def wrapper2(*args, **kw):
             rv = f(*args, **kw)
-            callbacks, optional = _jsonp_params(**kwargs)
             return _json_p_handler(rv, callbacks, optional)
         return wrapper2
 
