@@ -1,6 +1,12 @@
 Flask-JSON Changelog
 ====================
 
+0.3.0
+-----
+
+* JSONP support.
+* Allow to control HTTP status filed in ``json_response()``.
+
 0.2.0
 -----
 
