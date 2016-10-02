@@ -223,13 +223,19 @@ def _json_p_handler(rv, callbacks=None, optional=None, add_quotes=None):
         else:
             raise BadRequest('Missing JSONP callback parameter.')
 
+    # NOTE: flask 0.11 adds '\n' to the end but we don't need it here.
+
     if _is_str(rv):
+        if rv.endswith('\n'):
+            rv = rv[:-1]
         if add_quotes:
             data = '"%s"' % rv.replace('"', '\\"')
         else:
             data = '%s' % rv
     else:
         data = _build_response(rv, add_status=False).get_data(as_text=True)
+        if data.endswith('\n'):
+            data = data[:-1]
 
     data = text_type('%s(%s);') % (callback, data)
     response = current_app.response_class(
