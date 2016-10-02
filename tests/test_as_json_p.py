@@ -99,7 +99,9 @@ class TestAsJsonP(CommonTest):
             r = json_response(val=100, add_status_=False)
             val = _json_p_handler(r, callbacks=['callback'], optional=False)
 
-            assert_equals(val.get_data(as_text=True), 'foo({"val": 100});')
+            assert_equals(val.get_data(as_text=True).replace(' ', ''),
+                          'foo({"val":100});')
+
             assert_equals(val.status_code, 200)
             assert_equals(val.headers['Content-Type'], 'application/javascript')
 
@@ -127,6 +129,8 @@ class TestAsJsonP(CommonTest):
             assert_equals(r.headers['Content-Type'], 'application/javascript')
             # Build test value.
             param = json.jsonify(val=1, name='Sam').get_data(as_text=True)
+            if param.endswith('\n'):
+                param = param[:-1]
             text = 'foo(%s);' % param
             assert_equals(r.get_data(as_text=True), text)
 
@@ -143,6 +147,9 @@ class TestAsJsonP(CommonTest):
             assert_equals(r.headers['Content-Type'], 'application/javascript')
 
             param = json.jsonify(val=1, name='Sam').get_data(as_text=True)
+            # In flask 0.11 it adds '\n' to the end, we don't need it here.
+            if param.endswith('\n'):
+                param = param[:-1]
             text = 'foo(%s);' % param
             assert_equals(r.get_data(as_text=True), text)
 
@@ -172,5 +179,9 @@ class TestAsJsonP(CommonTest):
             assert_equals(r.headers['Content-Type'], 'application/javascript')
 
             param = json.jsonify(val=1, name='Sam').get_data(as_text=True)
+            # In flask 0.11 it adds '\n' to the end, we don't need it here.
+            if param.endswith('\n'):
+                param = param[:-1]
             text = 'foo(%s);' % param
+            d = r.get_data(as_text=True)
             assert_equals(r.get_data(as_text=True), text)
