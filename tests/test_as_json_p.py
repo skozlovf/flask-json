@@ -31,8 +31,9 @@ def req(app, *args, **kwargs):
 class TestAsJsonP(object):
     # Test: required callback in the URL query.
     # It must fail since callback name is not provided.
+    @pytest.mark.xfail(raises=BadRequest)
     def test_handler_missing_callback_required(self, app):
-        with pytest.raises(BadRequest), req(app, '/?param=1'):
+        with req(app, '/?param=1'):
             _json_p_handler('x', callbacks=['callback', 'foo'], optional=False)
 
     # Test: optional callback in the URL query.
@@ -159,12 +160,13 @@ class TestAsJsonP(object):
     # Test: @as_json_p with parameters, with missing callback.
     # Here we force @as_json_p to use custom callback names
     # and make it required.
+    @pytest.mark.xfail(raises=BadRequest)
     def test_complex_required_missing(self, app):
         @as_json_p(callbacks=['boo'], optional=False)
         def view():
             return dict(val=1, name='Sam')
 
-        with pytest.raises(BadRequest), req(app, '/?callback=foo'):
+        with req(app, '/?callback=foo'):
             view()
 
     # Test: @as_json_p with parameters.
