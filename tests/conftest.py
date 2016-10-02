@@ -1,6 +1,10 @@
+import sys
+import os.path
 import pytest
 from flask import Flask, json
 from flask.testing import FlaskClient as _FlaskClient
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import flask_json
 
 
