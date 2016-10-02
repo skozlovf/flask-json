@@ -13,7 +13,7 @@ env:
   - FLASK=0.11.1
 install:
   - pip install Flask==$FLASK
-  - pip install pycodestyle
+  - pip install pycodestyle pytest pytest-cov
 before_script:
  - pycodestyle flask_json.py
 script: py.test
