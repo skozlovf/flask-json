@@ -2,12 +2,14 @@
 """
 This module provides tests for Flask-JSON encoding feature.
 """
-from .common import *
+import pytest
 from datetime import datetime, date, time, tzinfo, timedelta
+import flask_json
 from flask_json import json_response
 
 
-class TestEncode(CommonTest):
+@pytest.mark.usefixtures('app_request')
+class TestEncode(object):
     # Test: encode lazy string.
     def test_lazystring(self):
         # Skip this test if speaklater is not installed.
@@ -22,23 +24,23 @@ class TestEncode(CommonTest):
         flask_json._LazyString = _LazyString
 
         r = json_response(text=make_lazy_string(lambda: u'Привет'))
-        assert_equals(r.status_code, 200)
-        assert_equals(r.json['text'], u'Привет')
+        assert r.status_code, 200
+        assert r.json['text'] == u'Привет'
 
     # Test: encode iterable types: set, generators, iterators.
     # All of the must be converted to array of values.
     def test_iterable(self):
         # set
         r = json_response(lst=set([1, 2, 3]))
-        assert_equals(r.json['lst'], [1, 2, 3])
+        assert r.json['lst'] == [1, 2, 3]
 
         # generator
         r = json_response(lst=(x for x in [3, 2, 42]))
-        assert_equals(r.json['lst'], [3, 2, 42])
+        assert r.json['lst'] == [3, 2, 42]
 
         # iterator
         r = json_response(lst=iter([1, 2, 3]))
-        assert_equals(r.json['lst'], [1, 2, 3])
+        assert r.json['lst'] == [1, 2, 3]
 
     # Test: encode stuff if speaklater is not installed.
     # Here we just check if JSONEncoderEx.default() runs without errors.
@@ -48,8 +50,8 @@ class TestEncode(CommonTest):
         flask_json._LazyString = None
 
         r = json_response(text=time())
-        assert_equals(r.status_code, 200)
-        assert_equals(r.json['text'], '00:00:00')
+        assert r.status_code == 200
+        assert r.json['text'] == '00:00:00'
 
     # Helper function to build response with time values.
     # Used by test_datetime_*().
@@ -70,88 +72,89 @@ class TestEncode(CommonTest):
     # By default ISO format is used.
     def test_datetime_default_format(self):
         r = TestEncode.get_time_values()
-        assert_equals(r.status_code, 200)
-        assert_equals(r.json['tm1'], '12:34:56')
-        assert_equals(r.json['tm2'], '01:02:03.000175')
-        assert_equals(r.json['dt'], '2015-12-07')
-        assert_equals(r.json['dtm'], '2014-05-12T17:24:10+01:00')
+        assert r.status_code == 200
+        assert r.json['tm1'] == '12:34:56'
+        assert r.json['tm2'] == '01:02:03.000175'
+        assert r.json['dt'] == '2015-12-07'
+        assert r.json['dtm'] == '2014-05-12T17:24:10+01:00'
 
     # Test: encode datetime, date and time values with custom format.
-    def test_datetime_custom_format(self):
-        self.app.config['JSON_TIME_FORMAT'] = '%M:%S:%H'
-        self.app.config['JSON_DATE_FORMAT'] = '%Y.%m.%d'
-        self.app.config['JSON_DATETIME_FORMAT'] = '%Y/%m/%d %H-%M-%S'
+    def test_datetime_custom_format(self, app):
+        app.config['JSON_TIME_FORMAT'] = '%M:%S:%H'
+        app.config['JSON_DATE_FORMAT'] = '%Y.%m.%d'
+        app.config['JSON_DATETIME_FORMAT'] = '%Y/%m/%d %H-%M-%S'
 
         r = TestEncode.get_time_values()
-        assert_equals(r.status_code, 200)
-        assert_equals(r.json['tm1'], '34:56:12')
-        assert_equals(r.json['tm2'], '02:03:01')
-        assert_equals(r.json['dt'], '2015.12.07')
-        assert_equals(r.json['dtm'], '2014/05/12 17-24-10')
+        assert r.status_code == 200
+        assert r.json['tm1'] == '34:56:12'
+        assert r.json['tm2'] == '02:03:01'
+        assert r.json['dt'] == '2015.12.07'
+        assert r.json['dtm'] == '2014/05/12 17-24-10'
 
     # Test: encode custom type;
     # Check if __json__() is not used by default.
     # Here json encoder raises 'TypeError: is not JSON serializable'.
-    @raises(TypeError)
     def test_custom_obj_default_json(self):
         class MyJsonItem(object):
             def __json__(self):
                 return '<__json__>'
-
-        json_response(item=MyJsonItem())
+        with pytest.raises(TypeError):
+            json_response(item=MyJsonItem())
 
     # Test: encode custom type;
     # Check if for_json() is not used by default.
     # Here json encoder raises 'TypeError: is not JSON serializable'.
-    @raises(TypeError)
     def test_custom_obj_default_for_json(self):
         class MyJsonItem(object):
             def for_json(self):
                 return '<for_json>'
-
-        json_response(item=MyJsonItem())
+        with pytest.raises(TypeError):
+            json_response(item=MyJsonItem())
 
     # Test: encode custom type with __json__().
-    def test_custom_obj_json(self):
+    def test_custom_obj_json(self, app):
         class MyJsonItem(object):
             def __json__(self):
                 return '<__json__>'
 
         # To use __json__() and for_json() we have to set this config.
-        self.app.config['JSON_USE_ENCODE_METHODS'] = True
+        app.config['JSON_USE_ENCODE_METHODS'] = True
         r = json_response(item=MyJsonItem())
-        assert_equals(r.json['item'], '<__json__>')
+        assert r.json['item'] == '<__json__>'
 
     # Test: encode custom type with for_json().
-    def test_custom_obj_for_json(self):
+    def test_custom_obj_for_json(self, app):
         class MyJsonItem(object):
             def for_json(self):
                 return '<for_json>'
 
-        self.app.config['JSON_USE_ENCODE_METHODS'] = True
+        app.config['JSON_USE_ENCODE_METHODS'] = True
         r = json_response(item=MyJsonItem())
-        assert_equals(r.json['item'], '<for_json>')
+        assert r.json['item'] == '<for_json>'
 
     # Test: if __json__() gets called before for_json().
-    def test_custom_obj_priority(self):
+    def test_custom_obj_priority(self, app):
         class MyJsonItem(object):
             def __json__(self):
                 return '<__json__>'
             def for_json(self):
                 return '<for_json>'
 
-        self.app.config['JSON_USE_ENCODE_METHODS'] = True
+        app.config['JSON_USE_ENCODE_METHODS'] = True
         r = json_response(item=MyJsonItem())
-        assert_equals(r.json['item'], '<__json__>')
+        assert r.json['item'] == '<__json__>'
 
     # Test: encoder with custom encoding function.
-    def test_hook(self):
+    def test_hook(self, app):
         class Fake(object):
             data = 0
 
         # Encode custom type with encoding hook.
         # This way is additional to __json__() and for_json().
-        @self.ext.encoder
+
+        encoder = app.extensions['json'].encoder
+
+        @encoder
         def my_encoder(o):
             if isinstance(o, Fake):
                 return 'fake-%d' % o.data
@@ -159,13 +162,13 @@ class TestEncode(CommonTest):
         fake = Fake()
         fake.data = 42
         r = json_response(fake=fake, tm=time(12, 34, 56), txt='txt')
-        assert_equals(r.status_code, 200)
-        assert_equals(r.json['fake'], 'fake-42')
-        assert_equals(r.json['tm'], '12:34:56')
-        assert_equals(r.json['txt'], 'txt')
+        assert r.status_code == 200
+        assert r.json['fake'] == 'fake-42'
+        assert r.json['tm'] == '12:34:56'
+        assert r.json['txt'] == 'txt'
 
     # Test: if JSONEncoderEx calls original default() method for unknown types.
     # In such situation exception will be raised (not serializable).
-    @raises(TypeError)
     def test_encoder_invalid(self):
-        json_response(fake=object())
+        with pytest.raises(TypeError):
+            json_response(fake=object())
