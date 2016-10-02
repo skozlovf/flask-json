@@ -4,31 +4,32 @@ make sure what request.get_json() call works and can convert data to JSON
 (it's probably more integration test than unit test to see if Flask and part
 of Flask-JSON works together).
 """
-from .common import *
+import pytest
 from flask import request
 from flask_json import json_response, JsonTestResponse
 
 
-class TestBase(CommonTest):
+class TestBase(object):
     # CommonTest setups Flask to use JsonTestResponse, so here we test if
     # response class is JsonTestResponse and also access to it's json content.
+    @pytest.mark.usefixtures('app_request')
     def test_response_class(self):
         r = json_response(one=12)
-        assert_is_instance(r, JsonTestResponse)
-        assert_dict_equal(r.json, dict(status=200, one=12))
+        assert isinstance(r, JsonTestResponse)
+        assert r.json == dict(status=200, one=12)
 
         r = json_response(two='hello')
-        assert_is_instance(r, JsonTestResponse)
-        assert_equals(r.json['two'], 'hello')
-        assert_equals(r.json['status'], 200)
+        assert isinstance(r, JsonTestResponse)
+        assert r.json['two'] == 'hello'
+        assert r.json['status'] == 200
 
     # Check if request.get_json() call works.
-    def test_get_json(self):
-        @self.app.route('/test', methods=['POST'])
+    def test_get_json(self, app, client):
+        @app.route('/test', methods=['POST'])
         def endpoint():
             data = request.get_json()
             return json_response(**data)
 
-        r = self.post_json('/test', dict(some=42))
-        assert_equals(r.status_code, 200)
-        assert_dict_equal(r.json, dict(status=200, some=42))
+        r = client.post_json('/test', dict(some=42))
+        assert r.status_code == 200
+        assert r.json == dict(status=200, some=42)
