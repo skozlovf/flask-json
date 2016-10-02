@@ -68,7 +68,6 @@ class TestResponse(CommonTest):
         # There must be at least Content-Type, Content-Length and
         # our 2 extra headers.
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY-HEADER'), 'my value')
         assert_equals(r.headers.get('X-HEADER', type=int), 42)
 
@@ -80,6 +79,5 @@ class TestResponse(CommonTest):
         assert_equals(r.status_code, 200)
         assert_equals(r.mimetype, 'application/json')
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY-HEADER'), 'my value')
         assert_equals(r.headers.get('X-HEADER', type=int), 42)

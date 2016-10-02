@@ -88,7 +88,6 @@ class TestAsJson(CommonTest):
         assert_dict_equal(r.json, {'status': 200, 'value': 1})
 
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY'), 'hdr')
 
     # Test: convert dict return value to JSON response with custom status
@@ -103,7 +102,6 @@ class TestAsJson(CommonTest):
         assert_dict_equal(r.json, {'status': 400, 'value': 1})
 
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY'), 'hdr')
 
     # Test: Same as before but different order of values.
@@ -117,7 +115,6 @@ class TestAsJson(CommonTest):
         assert_dict_equal(r.json, {'status': 400, 'value': 1})
 
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY'), 'hdr')
 
     # Test: None payload.
@@ -151,7 +148,6 @@ class TestAsJson(CommonTest):
         assert_equals(r.status_code, 200)
         assert_dict_equal(r.json, {'status': 200})
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY'), 'hdr')
 
     # Test: None payload + status + headers.
@@ -164,7 +160,6 @@ class TestAsJson(CommonTest):
         assert_equals(r.status_code, 400)
         assert_dict_equal(r.json, {'status': 400})
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY'), 'hdr')
 
     # Test: None payload + headers + status.
@@ -177,7 +172,6 @@ class TestAsJson(CommonTest):
         assert_equals(r.status_code, 401)
         assert_dict_equal(r.json, {'status': 401})
         assert_equals(r.headers.get('Content-Type'), 'application/json')
-        assert_true(r.headers.get('Content-Length', type=int) > 0)
         assert_equals(r.headers.get('MY'), 'hdr')
 
     # Test: if a view returns Flask response.
