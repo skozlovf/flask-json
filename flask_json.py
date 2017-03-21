@@ -104,7 +104,7 @@ def json_response(status_=200, headers_=None, add_status_=None, **kwargs):
     if add_status_ is not None:
         add_status = add_status_
     else:
-        add_status = current_app.config['JSON_ADD_STATUS']
+        add_status = current_app.config.get('JSON_ADD_STATUS', True)
 
     if add_status:
         field = current_app.config['JSON_STATUS_FIELD_NAME']
