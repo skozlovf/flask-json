@@ -2,6 +2,7 @@ import sys
 import os.path
 import pytest
 from flask import Flask, json
+from flask import __version__ as flask_ver
 from flask.testing import FlaskClient as _FlaskClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -76,3 +77,9 @@ def app_request(app):
     ctx.push()
     yield ctx
     ctx.pop()
+
+
+def pytest_namespace():
+    return {
+        'flask_ver': tuple(int(x) for x in flask_ver.split('.'))
+    }

@@ -82,3 +82,40 @@ class TestResponse(object):
         assert r.headers.get('Content-Type') == 'application/json'
         assert r.headers.get('MY-HEADER') == 'my value'
         assert r.headers.get('X-HEADER', type=int) == 42
+
+    # Test: if both data_ and kwargs are set.
+    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
+                        reason="requires flask >= 0.11")
+    def test_params_both(self):
+        with pytest.raises(AssertionError):
+            json_response(data_=1, val=1)
+
+    # Test: pass values via 'data_'.
+    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
+                        reason="requires flask >= 0.11")
+    def test_data_param(self):
+        r = json_response(data_=1)
+        assert r.json == 1
+
+        r = json_response(data_=[1, '2'])
+        assert r.json == [1, '2']
+
+        # No status is set if data_ is specified.
+        r = json_response(data_=1, add_status_=True)
+        assert r.json == 1
+
+        # Works like you called with kwargs json_response(one=1, two='2').
+        r = json_response(data_=dict(one=1, two='2'), add_status_=False)
+        assert r.json == dict(one=1, two='2')
+
+        r = json_response(data_=dict(one=1, two='2'), add_status_=True)
+        assert r.json == dict(one=1, two='2', status=200)
+
+        r = json_response(400, data_=dict(one=1, two='2'), add_status_=True)
+        assert r.json == dict(one=1, two='2', status=400)
+
+        hdr = (('MY-HEADER', 'my value'),)
+        r = json_response(headers_=hdr, data_=dict(one=1, two='2'),
+                          add_status_=True)
+        assert r.json == dict(one=1, two='2', status=200)
+        assert r.headers.get('MY-HEADER') == 'my value'

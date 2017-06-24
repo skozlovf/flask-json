@@ -190,3 +190,63 @@ class TestAsJsonP(object):
                 param = param[:-1]
             text = 'foo(%s);' % param
             assert r.get_data(as_text=True) == text
+
+    # Test: simple usage, no callback; it must proceed like @as_json.
+    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
+                        reason="requires flask >= 0.11")
+    def test_simple_no_jsonp_int(self, app):
+        @as_json_p
+        def view():
+            return 1
+
+        with req(app, '/'):
+            r = view()
+            assert r.status_code == 200
+            assert r.headers['Content-Type'] == 'application/json'
+            assert r.json == 1
+
+    # Test: return integer.
+    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
+                        reason="requires flask >= 0.11")
+    def test_simple_int(self, app):
+        @as_json_p
+        def view():
+            return 1
+
+        with req(app, '/?callback=foo'):
+            r = view()
+            assert r.status_code == 200
+            assert r.headers['Content-Type'] == 'application/javascript'
+            assert r.get_data(as_text=True) == 'foo(1);'
+
+    # Test: return string.
+    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
+                        reason="requires flask >= 0.11")
+    def test_simple_str(self, app):
+        @as_json_p
+        def view():
+            return '12\"3'
+
+        with req(app, '/?callback=foo'):
+            r = view()
+            assert r.status_code == 200
+            assert r.headers['Content-Type'] == 'application/javascript'
+            assert r.get_data(as_text=True) == 'foo("12\\"3");'
+
+    # Test: return array.
+    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
+                        reason="requires flask >= 0.11")
+    def test_simple_array(self, app):
+        @as_json_p
+        def view():
+            return ['1', 2]
+
+        with req(app, '/?callback=foo'):
+            r = view()
+            assert r.status_code == 200
+            assert r.headers['Content-Type'] == 'application/javascript'
+            param = json.jsonify(['1', 2]).get_data(as_text=True)
+            if param.endswith('\n'):
+                param = param[:-1]
+            text = 'foo(%s);' % param
+            assert r.get_data(as_text=True) == text
