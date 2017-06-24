@@ -1,6 +1,17 @@
 Flask-JSON Changelog
 ====================
 
+0.3.2
+-----
+
+* Add non-dictionary values support.
+* Fix tests.
+
+0.3.1
+-----
+
+* Switch to ``pytest``.
+
 0.3.0
 -----
 
