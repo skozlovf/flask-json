@@ -12,18 +12,13 @@ from flask_json import json_response
 class TestEncode(object):
     # Test: encode lazy string.
     def test_lazystring(self):
-        # Skip this test if speaklater is not installed.
-        try:
-            from speaklater import make_lazy_string, _LazyString
-        except ImportError:
-            return
-
+        speaklater = pytest.importorskip("speaklater")
         # test_nospeaklater() overrides this import so we have to revert it
         # otherwise the test may fail because flask_json._LazyString
         # will be None
-        flask_json._LazyString = _LazyString
+        flask_json._LazyString = speaklater._LazyString
 
-        r = json_response(text=make_lazy_string(lambda: u'Привет'))
+        r = json_response(text=speaklater.make_lazy_string(lambda: u'Привет'))
         assert r.status_code, 200
         assert r.json['text'] == u'Привет'
 
@@ -91,25 +86,25 @@ class TestEncode(object):
         assert r.json['dt'] == '2015.12.07'
         assert r.json['dtm'] == '2014/05/12 17-24-10'
 
-    # Test: encode custom type;
-    # Check if __json__() is not used by default.
-    # Here json encoder raises 'TypeError: is not JSON serializable'.
-    @pytest.mark.xfail(raises=TypeError)
+    # Test: encode custom type, check if __json__() is not used by default.
     def test_custom_obj_default_json(self):
         class MyJsonItem(object):
             def __json__(self):
                 return '<__json__>'
-        json_response(item=MyJsonItem())
 
-    # Test: encode custom type;
-    # Check if for_json() is not used by default.
-    # Here json encoder raises 'TypeError: is not JSON serializable'.
-    @pytest.mark.xfail(raises=TypeError)
+        with pytest.raises(TypeError) as e:
+            json_response(item=MyJsonItem())
+        assert str(e.value).endswith(' is not JSON serializable')
+
+    # Test: encode custom type, check if for_json() is not used by default.
     def test_custom_obj_default_for_json(self):
         class MyJsonItem(object):
             def for_json(self):
                 return '<for_json>'
-        json_response(item=MyJsonItem())
+
+        with pytest.raises(TypeError) as e:
+            json_response(item=MyJsonItem())
+        assert str(e.value).endswith(' is not JSON serializable')
 
     # Test: encode custom type with __json__().
     def test_custom_obj_json(self, app):
@@ -169,6 +164,6 @@ class TestEncode(object):
 
     # Test: if JSONEncoderEx calls original default() method for unknown types.
     # In such situation exception will be raised (not serializable).
-    @pytest.mark.xfail(raises=TypeError)
     def test_encoder_invalid(self):
-        json_response(fake=object())
+        with pytest.raises(TypeError):
+            json_response(fake=object())

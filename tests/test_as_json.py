@@ -176,14 +176,14 @@ class TestAsJson(object):
         assert r.headers.get('MY') == 'hdr'
 
     # Test: if a view returns Flask response.
-    # It must fail because we accept only JSON response in @as_json.
-    @pytest.mark.xfail(raises=AssertionError)
     def test_with_response(self):
         @as_json
         def view():
             return Response()
 
-        view()
+        # It must fail because we accept only JSON response in @as_json.
+        with pytest.raises(AssertionError):
+            view()
 
     # Test: if a view returns json_response().
     def test_with_json_response(self):
@@ -196,13 +196,13 @@ class TestAsJson(object):
         assert r.headers.get('Content-Type') == 'application/json'
         assert r.json == {'status': 200, 'val': 12}
 
-    # Test invalid return value.
+    # Test: invalid return value.
     # See also comments for _normalize_view_tuple().
-    # Here as_json() raises ValueError: Unsupported return value.
-    @pytest.mark.xfail(raises=ValueError)
     def test_invalid(self):
         @as_json
         def view1():
             return object()  # not supported.
 
-        view1()
+        with pytest.raises(ValueError) as e:
+            view1()
+        assert str(e.value) == 'Unsupported return value.'
