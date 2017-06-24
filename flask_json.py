@@ -113,6 +113,9 @@ def json_response(status_=200, headers_=None, add_status_=None, data_=None,
 
         If :class:`dict` is passed via ``data_`` then behaviour is like you
         pass data in the keyword arguments.
+
+    .. versionchanged:: 0.3.2
+       Added ``data_`` and non-dictionary values support.
     """
     assert data_ is None or not kwargs
 
@@ -199,6 +202,10 @@ def as_json(f):
         @as_json
         def view_simple():
             return dict(param=value, param2=value2)
+
+        @as_json
+        def view_simple2():
+            return [1, 2, 3]
 
         @as_json
         def view_comp():

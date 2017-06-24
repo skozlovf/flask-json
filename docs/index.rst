@@ -148,6 +148,11 @@ With :func:`~flask_json.json_response` you can:
 
     json_response(server_name='norris', available=True)
 
+* Create JSON response with arrays or single values (*new in 0.3.2*)::
+
+    json_response(data_=[1, 2, 3])
+    json_response(data_=100500)
+
 * Specify HTTP status code for response::
 
     json_response(status_=400, server_name='norris', available=True)
@@ -165,6 +170,9 @@ response JSON::
 but you can disable this or change status field name (see :ref:`config` for
 more info).
 
+Note what if you use ``data_`` then HTTP status is not added unless you pass
+a dictionary.
+
 Another way is to wrap a view with :func:`@as_json <flask_json.as_json>`
 decorator and return json content::
 
@@ -174,6 +182,10 @@ decorator and return json content::
     @as_json
     def my_view():
         return dict(server_name="norris")
+
+    @as_json
+    def my_view2():
+        return [1, 2, 3]  # New in 0.3.2
 
 The decorator calls :func:`~flask_json.json_response` internally and provides
 the same features. You also can return HTTP status and headers::
@@ -216,6 +228,11 @@ If you return already created JSON response then it will be used as is::
     def my_view():
         do_some_stuff()
         return json_response(some=value)
+
+    @as_json
+    def my_view2():
+        do_some_stuff()
+        return json_response(_data=[1, 2, 3], headers_={'X-STATUS': 'ok'})
 
 And one more way to create JSON response is to raise
 :class:`~flask_json.JsonError`::
