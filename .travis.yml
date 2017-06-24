@@ -4,6 +4,8 @@ python:
   - "2.7"
   - "3.3"
   - "3.4"
+  - "3.5"
+  - "3.6"
 env:
   - FLASK=0.10
   - FLASK=0.10.1
@@ -11,6 +13,10 @@ env:
   - FLASK=0.10.1 speaklater
   - FLASK=0.11
   - FLASK=0.11.1
+  - FLASK=0.11.2
+  - FLASK=0.12
+  - FLASK=0.12.1
+  - FLASK=0.12.2
 install:
   - pip install Flask==$FLASK
   - pip install pycodestyle pytest pytest-cov
