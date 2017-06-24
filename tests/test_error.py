@@ -7,7 +7,7 @@ from flask_json import JsonError
 
 class TestJsonError(object):
     # Test: simple JsonError raising.
-    # The rror must be converted to JSON response with HTTP 400 status.
+    # The error must be converted to JSON response with HTTP 400 status.
     def test_simple(self, app, client):
         @app.route('/test')
         def endpoint():
