@@ -35,7 +35,8 @@ else:
         return isinstance(value, str)
 
 
-def json_response(status_=200, headers_=None, add_status_=None, **kwargs):
+def json_response(status_=200, headers_=None, add_status_=None, data_=None,
+                  **kwargs):
     """Helper function to build JSON response
     with the given HTTP status and fields(``kwargs``).
 
@@ -92,16 +93,36 @@ def json_response(status_=200, headers_=None, add_status_=None, **kwargs):
         json_response(headers_=headers, test=12)
 
     Args:
-        `status_`: HTTP response status code.
-        `headers_`: iterable or dictionary with header values.
-        `add_status_`: Add status field. If not set then
+        status_: HTTP response status code.
+        headers_: iterable or dictionary with header values.
+        add_status_: Add status field. If not set then
             :ref:`JSON_ADD_STATUS <opt_add_status>` is used.
+        data_: Data to put in result JSON. It can be used instead of ``kwargs``
+            or if you want to pass non-dictionary value.
         kwargs: keyword arguments to put in result JSON.
 
     Returns:
         flask.Response: Response with the JSON content.
+
+    Note:
+        Only ``data_`` or ``kwargs`` is allowed.
+
+        If ``data_`` is not a :class:`dict` then ``add_status_`` and
+        :ref:`JSON_ADD_STATUS <opt_add_status>` are ignored and no status
+        is stored in the result JSON.
+
+        If :class:`dict` is passed via ``data_`` then behaviour is like you
+        pass data in the keyword arguments.
     """
-    if add_status_ is not None:
+    assert data_ is None or not kwargs
+
+    if isinstance(data_, dict):
+        kwargs = data_
+        data_ = None
+
+    if data_ is not None:
+        add_status = False
+    elif add_status_ is not None:
         add_status = add_status_
     else:
         add_status = current_app.config['JSON_ADD_STATUS']
@@ -111,7 +132,7 @@ def json_response(status_=200, headers_=None, add_status_=None, **kwargs):
         if field not in kwargs:
             kwargs[field] = status_
 
-    response = jsonify(**kwargs)
+    response = jsonify(data_) if data_ is not None else jsonify(**kwargs)
     response.status_code = status_
 
     if headers_ is not None:
@@ -146,11 +167,15 @@ def _build_response(data, add_status=None):
         return data
     elif isinstance(data, tuple):
         d, status, headers = _normalize_view_tuple(data)
-        return json_response(status_=status or 200, headers_=headers,
-                             add_status_=add_status,
-                             **(d or dict()))
+        if isinstance(d, dict):
+            return json_response(status_=status or 200, headers_=headers,
+                                 add_status_=add_status, **d)
+        else:
+            return json_response(status_=status or 200, headers_=headers,
+                                 add_status_=add_status, data_=d)
     else:
-        raise ValueError('Unsupported return value.')
+        return json_response(data_=data)
+        # raise ValueError('Unsupported return value.')
 
 
 def as_json(f):
