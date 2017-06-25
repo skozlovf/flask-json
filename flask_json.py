@@ -94,13 +94,13 @@ def json_response(status_=200, headers_=None, add_status_=None, data_=None,
         json_response(headers_=headers, test=12)
 
     Args:
-        status_: HTTP response status code.
-        headers_: iterable or dictionary with header values.
-        add_status_: Add status field. If not set then
+        `status_`: HTTP response status code.
+        `headers_`: iterable or dictionary with header values.
+        `add_status_`: Add status field. If not set then
             :ref:`JSON_ADD_STATUS <opt_add_status>` is used.
-        data_: Data to put in result JSON. It can be used instead of ``kwargs``
-            or if you want to pass non-dictionary value.
-        kwargs: keyword arguments to put in result JSON.
+        `data_`: Data to put in result JSON. It can be used instead of
+            ``kwargs`` or if you want to pass non-dictionary value.
+        `kwargs`: keyword arguments to put in result JSON.
 
     Returns:
         flask.Response: Response with the JSON content.
