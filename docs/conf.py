@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Flask-JSON'
-copyright = u'2015, Sergey Kozlov'
+copyright = u'2015 - 2017 Sergey Kozlov'
 author = u'Sergey Kozlov'
 
 # The version info for the project you're documenting, acts as replacement for

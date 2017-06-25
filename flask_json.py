@@ -4,7 +4,7 @@
 
     A Flask extension providing better JSON support.
 
-    :copyright: (c) 2015 by Sergey Kozlov
+    :copyright: (c) 2015 - 2017 by Sergey Kozlov
     :license: BSD, see LICENSE for more details.
 """
 from __future__ import absolute_import
