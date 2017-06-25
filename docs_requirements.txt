@@ -1,2 +1,4 @@
+sphinx
 sphinxcontrib-napoleon
+Flask-Sphinx-Themes
 werkzeug
