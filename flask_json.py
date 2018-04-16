@@ -10,14 +10,14 @@
 from __future__ import absolute_import
 import sys
 import collections
-from functools import wraps
+from functools import partial, wraps
 from datetime import datetime, date, time
 try:
     from speaklater import _LazyString
 # Don't cover since simulated in test_encoder_nospeaklater().
 except ImportError:  # pragma: no cover
     _LazyString = None
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import default_exceptions, BadRequest, HTTPException
 from flask import current_app, jsonify, request, Request, Response
 from flask import json
 
@@ -523,6 +523,8 @@ class FlaskJSON(object):
         app.config.setdefault('JSON_ADD_STATUS', True)
         app.config.setdefault('JSON_STATUS_FIELD_NAME', 'status')
         app.config.setdefault('JSON_DECODE_ERROR_MESSAGE', 'Not a JSON.')
+        jsonify_errors = app.config.setdefault(
+            'JSON_JSONIFY_HTTP_ERRORS', False)
 
         app.config.setdefault('JSON_JSONP_STRING_QUOTES', True)
         app.config.setdefault('JSON_JSONP_OPTIONAL', True)
@@ -538,8 +540,36 @@ class FlaskJSON(object):
         app.json_encoder = self._encoder_class
         app.errorhandler(JsonError)(self._error_handler)
 
+        if jsonify_errors:
+            self._jsonify_http_errors(app)
+
         if app.testing:
             app.response_class = JsonTestResponse
+
+    def _jsonify_http_errors(self, app):
+        """Force HTTP errors returned as JSON instead of default HTML."""
+        status_field = app.config['JSON_STATUS_FIELD_NAME']
+
+        def _handler(error, status_code, reason, default_description):
+            response = {
+                'reason': reason,
+                'description': default_description,
+            }
+            if app.config['JSON_ADD_STATUS']:
+                response[status_field] = status_code
+
+            if isinstance(error, HTTPException) and error.description:
+                response['description'] = error.description
+
+            return json_response(status_code, data_=response)
+
+        for code, exc in default_exceptions.items():
+            app.register_error_handler(code, partial(
+                _handler,
+                status_code=code,
+                reason=exc().name,
+                default_description=exc.description,
+            ))
 
     def error_handler(self, func):
         """This decorator allows to set custom handler for the
