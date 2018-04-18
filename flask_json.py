@@ -386,7 +386,8 @@ class JsonError(Exception):
 
 
 class JsonRequest(Request):
-    """This class changes :class:`flask.Request` behaviour on JSON parse errors.
+    """This class changes :class:`flask.Request` behaviour on JSON parse
+    errors.
 
     :meth:`flask.Request.get_json` will raise :class:`.JsonError`
     by default on invalid JSON content.
