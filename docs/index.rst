@@ -251,6 +251,17 @@ headers::
                         headers_=dict(MYHEADER=12, HEADER2='fail'),
                         error_description='Server is down')
 
+Jsonify HTTP errors
+-------------------
+
+:ref:`JSON_JSONIFY_HTTP_ERRORS <opt_jsonify_http_errors>` option allows to
+force returning all standard HTTP errors as JSON.
+
+Now response looks this way::
+
+    $ curl http://localhost:5000
+    {"description":"The server encountered an internal error and was unable to complete your request.  Either the server is overloaded or there is an error in the application.", "reason":"Internal Server Error", "status":500}
+
 Encoding values
 ===============
 
@@ -556,6 +567,17 @@ You can configure Flask-JSON with the following options:
                                 List of allowed JSONP callback query parameters.
 
                                 Default: ``['callback', 'jsonp']``.
+
+``JSON_JSONIFY_HTTP_ERRORS``    .. _opt_jsonify_http_errors:
+
+                                Return standard HTTP Errors as JSON instead of
+                                HTML by default.
+
+                                Note: this will register custom error handler
+                                in Flask. So, this option should be set before
+                                the init of FlaskJSON.
+
+                                Default: ``False``.
 ==============================  ================================================
 
 See :ref:`python:strftime-strptime-behavior` for more info about time related
