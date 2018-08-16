@@ -559,18 +559,22 @@ class FlaskJSON(object):
             if app.config['JSON_ADD_STATUS']:
                 response[status_field] = status_code
 
-            if isinstance(error, HTTPException) and error.description:
+            if error.description:
                 response['description'] = error.description
 
             return json_response(status_code, data_=response)
 
         for code, exc in default_exceptions.items():
-            app.register_error_handler(code, partial(
-                _handler,
-                status_code=code,
-                reason=exc().name,
-                default_description=exc.description,
-            ))
+            try:
+                if issubclass(exc, HTTPException):
+                    app.register_error_handler(code, partial(
+                        _handler,
+                        status_code=code,
+                        reason=exc().name,
+                        default_description=exc.description,
+                    ))
+            except TypeError:
+                continue
 
     def error_handler(self, func):
         """This decorator allows to set custom handler for the
