@@ -559,7 +559,7 @@ class FlaskJSON(object):
             if app.config['JSON_ADD_STATUS']:
                 response[status_field] = status_code
 
-            if error.description:
+            if isinstance(error, HTTPException) and error.description:
                 response['description'] = error.description
 
             return json_response(status_code, data_=response)
