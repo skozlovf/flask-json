@@ -1,6 +1,11 @@
 Flask-JSON Changelog
 ====================
 
+0.3.3
+-----
+
+* Allow jsonify standard HTTP errors.
+
 0.3.2
 -----
 
