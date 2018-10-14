@@ -565,16 +565,13 @@ class FlaskJSON(object):
             return json_response(status_code, data_=response)
 
         for code, exc in default_exceptions.items():
-            try:
-                if issubclass(exc, HTTPException):
-                    app.register_error_handler(code, partial(
-                        _handler,
-                        status_code=code,
-                        reason=exc().name,
-                        default_description=exc.description,
-                    ))
-            except TypeError:
-                continue
+            if issubclass(exc, HTTPException):
+                app.register_error_handler(code, partial(
+                    _handler,
+                    status_code=code,
+                    reason=exc().name,
+                    default_description=exc.description,
+                ))
 
     def error_handler(self, func):
         """This decorator allows to set custom handler for the
