@@ -437,7 +437,7 @@ class JSONEncoderEx(json.JSONEncoder):
         # converting string to list of chars, since string is iterable too.
         if _LazyString is not None and isinstance(o, _LazyString):
             return text_type(o)
-        elif isinstance(o, collections.Iterable):
+        elif isinstance(o, collections.abc.Iterable):
             # All iterables will be converted to list.
             return list(o)
         elif isinstance(o, datetime):
