@@ -9,7 +9,10 @@
 """
 from __future__ import absolute_import
 import sys
-import collections
+try:
+    import collections.abc as collections_abc  # python 3.3+
+except ImportError:
+    import collections as collections_abc
 from functools import partial, wraps
 from datetime import datetime, date, time
 try:
@@ -437,7 +440,7 @@ class JSONEncoderEx(json.JSONEncoder):
         # converting string to list of chars, since string is iterable too.
         if _LazyString is not None and isinstance(o, _LazyString):
             return text_type(o)
-        elif isinstance(o, collections.abc.Iterable):
+        elif isinstance(o, collections_abc.Iterable):
             # All iterables will be converted to list.
             return list(o)
         elif isinstance(o, datetime):
