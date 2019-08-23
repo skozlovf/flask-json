@@ -15,6 +15,7 @@ env:
   - FLASK=0.12
   - FLASK=0.12.1
   - FLASK=0.12.2
+  - FLASK=1.1.1
 install:
   - pip install Flask==$FLASK
   - pip install pycodestyle==2.5.0 pytest==3.0.3 pytest-cov==2.3.1
