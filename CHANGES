@@ -1,6 +1,12 @@
 Flask-JSON Changelog
 ====================
 
+0.3.4
+-----
+
+* Fix deprecation warning.
+* Update tests.
+
 0.3.3
 -----
 
