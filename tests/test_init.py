@@ -16,7 +16,7 @@ def test_create():
 
 # Test: initial config on init with constructor.
 def test_init_constructor():
-    app = Flask(__name__)
+    app = Flask('testapp')
     ext = FlaskJSON(app)
 
     app.config.get('JSON_ADD_STATUS') == True
@@ -31,7 +31,7 @@ def test_init_constructor():
 
 # Test: initial config on deferred init.
 def test_init_deferred():
-    app = Flask(__name__)
+    app = Flask('testapp')
 
     # Check if we correctly handle this.
     # Well actually it's to increase test coverage.
@@ -54,7 +54,7 @@ def test_init_deferred():
 
 # Test: JsonTestResponse is set for testing mode.
 def test_init_testmode():
-    app = Flask(__name__)
+    app = Flask('testapp')
     app.config['TESTING'] = True
     FlaskJSON(app)
     assert app.response_class is JsonTestResponse
@@ -62,7 +62,7 @@ def test_init_testmode():
 
 # Test: decorators for uninitialized extension.
 def test_decorators():
-    app = Flask(__name__)
+    app = Flask('testapp')
     ext = FlaskJSON()
 
     @ext.error_handler
@@ -92,7 +92,7 @@ def test_decorators():
 
 # Test: decorators for initialized extension.
 def test_decorators_initialized():
-    app = Flask(__name__)
+    app = Flask('testapp')
     ext = FlaskJSON(app)
 
     @ext.invalid_json_error

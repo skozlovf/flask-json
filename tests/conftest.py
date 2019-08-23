@@ -43,7 +43,7 @@ def app():
     """This pytest fixture setups flask application
     and initializes Flask-JSON.
     """
-    app = Flask(__name__)
+    app = Flask('testapp')
     app.test_client_class = FlaskClient
     app.config['TESTING'] = True
     flask_json.FlaskJSON(app)
