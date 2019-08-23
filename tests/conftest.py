@@ -79,7 +79,5 @@ def app_request(app):
     ctx.pop()
 
 
-def pytest_namespace():
-    return {
-        'flask_ver': tuple(int(x) for x in flask_ver.split('.'))
-    }
+def pytest_configure(config):
+    pytest.flask_ver = tuple(int(x) for x in flask_ver.split('.'))
