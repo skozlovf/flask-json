@@ -24,7 +24,7 @@ from werkzeug.exceptions import default_exceptions, BadRequest, HTTPException
 from flask import current_app, jsonify, request, Request, Response
 from flask import json
 
-__version__ = '0.3.3'
+__version__ = '0.3.4'
 
 
 if sys.version_info[0] == 2:
