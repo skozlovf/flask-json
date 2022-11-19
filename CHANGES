@@ -4,7 +4,7 @@ Flask-JSON Changelog
 0.3.5
 -----
 
-* Improve empty data processing ([#9](https://github.com/skozlovf/flask-json/issues/9)).
+* Improve empty data processing (`#9 <https://github.com/skozlovf/flask-json/issues/9>`_).
 
 0.3.4
 -----
