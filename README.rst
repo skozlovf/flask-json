@@ -1,8 +1,8 @@
 Flask-JSON
 ==========
 
-.. image:: https://travis-ci.org/skozlovf/flask-json.png?branch=master
-   :target: https://travis-ci.org/skozlovf/flask-json
+.. image:: https://github.com/skozlovf/flask-json/actions/workflows/test.yml/badge.svg?branch=master
+   :target: https://github.com/skozlovf/flask-json/actions/workflows/test.yml
 
 Flask-JSON is a simple extension that adds better JSON support to Flask
 application.
