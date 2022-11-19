@@ -139,6 +139,9 @@ def json_response(status_=200, headers_=None, add_status_=None, data_=None,
         if field not in kwargs:
             kwargs[field] = status_
 
+    if data_ is None and not kwargs:
+        data_ = {}
+
     response = jsonify(data_) if data_ is not None else jsonify(**kwargs)
     response.status_code = status_
 
