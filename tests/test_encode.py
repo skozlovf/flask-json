@@ -64,8 +64,20 @@ class TestEncode(object):
                              dt=date(2015, 12, 7), dtm=dtm)
 
     # Test: encode datetime, date and time values with default format.
-    # By default ISO format is used.
+    # By default, flask converts to RFC 2822.
     def test_datetime_default_format(self):
+        r = TestEncode.get_time_values()
+        assert r.status_code == 200
+        assert r.json['tm1'] == '12:34:56'
+        assert r.json['tm2'] == '01:02:03.000175'
+        assert r.json['dt'] == 'Mon, 07 Dec 2015 00:00:00 GMT'
+        assert r.json['dtm'] == 'Mon, 12 May 2014 16:24:10 GMT'
+
+    # Test: encode datetime, date and time values with default format.
+    # Use ISO format.
+    def test_datetime_iso_format(self, app):
+        app.config['JSON_DATE_FORMAT'] = 'iso'
+        app.config['JSON_DATETIME_FORMAT'] = 'iso'
         r = TestEncode.get_time_values()
         assert r.status_code == 200
         assert r.json['tm1'] == '12:34:56'
@@ -138,6 +150,16 @@ class TestEncode(object):
         app.config['JSON_USE_ENCODE_METHODS'] = True
         r = json_response(item=MyJsonItem())
         assert r.json['item'] == '<__json__>'
+
+    # Test: non-serializable object if JSON_USE_ENCODE_METHODS is set.
+    def test_custom_obj_err(self, app):
+        class MyItem(object):
+            pass
+
+        app.config['JSON_USE_ENCODE_METHODS'] = True
+        with pytest.raises(TypeError) as e:
+            json_response(item=MyItem())
+        assert str(e.value).endswith(' is not JSON serializable')
 
     # Test: encoder with custom encoding function.
     def test_hook(self, app):

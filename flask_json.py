@@ -4,39 +4,21 @@
 
     A Flask extension providing better JSON support.
 
-    :copyright: (c) 2015 - 2017 by Sergey Kozlov
+    :copyright: (c) 2015 - 2022 by Sergey Kozlov
     :license: BSD, see LICENSE for more details.
 """
-from __future__ import absolute_import
-import sys
-try:
-    import collections.abc as collections_abc  # python 3.3+
-except ImportError:
-    import collections as collections_abc
+from collections.abc import Iterable
 from functools import partial, wraps
 from datetime import datetime, date, time
 try:
     from speaklater import _LazyString
-# Don't cover since simulated in test_encoder_nospeaklater().
 except ImportError:  # pragma: no cover
     _LazyString = None
 from werkzeug.exceptions import default_exceptions, BadRequest, HTTPException
-from flask import current_app, jsonify, request, Request, Response
-from flask import json
+from flask import current_app, jsonify, request, Request, Response, Flask
+from flask.json.provider import DefaultJSONProvider
 
 __version__ = '0.3.5'
-
-
-if sys.version_info[0] == 2:
-    text_type = unicode
-
-    def _is_str(value):
-        return isinstance(value, str) or isinstance(value, unicode)
-else:
-    text_type = str
-
-    def _is_str(value):
-        return isinstance(value, str)
 
 
 def json_response(status_=200, headers_=None, add_status_=None, data_=None,
@@ -139,9 +121,6 @@ def json_response(status_=200, headers_=None, add_status_=None, data_=None,
         if field not in kwargs:
             kwargs[field] = status_
 
-    if data_ is None and not kwargs:
-        data_ = {}
-
     response = jsonify(data_) if data_ is not None else jsonify(**kwargs)
     response.status_code = status_
 
@@ -173,7 +152,7 @@ def _build_response(data, add_status=None):
     elif isinstance(data, dict):
         return json_response(add_status_=add_status, **data)
     elif isinstance(data, Response):
-        assert 'application/json' in data.mimetype
+        assert current_app.json.mimetype == data.mimetype
         return data
     elif isinstance(data, tuple):
         d, status, headers = _normalize_view_tuple(data)
@@ -264,7 +243,7 @@ def _json_p_handler(rv, callbacks=None, optional=None, add_quotes=None):
 
     # NOTE: flask 0.11 adds '\n' to the end but we don't need it here.
 
-    if _is_str(rv):
+    if isinstance(rv, str):
         if rv.endswith('\n'):  # pragma: no cover
             rv = rv[:-1]
         if add_quotes:
@@ -276,7 +255,7 @@ def _json_p_handler(rv, callbacks=None, optional=None, add_quotes=None):
         if data.endswith('\n'):  # pragma: no cover
             data = data[:-1]
 
-    data = text_type('%s(%s);') % (callback, data)
+    data = str('%s(%s);') % (callback, data)
     response = current_app.response_class(
         data, status=200, content_type='application/javascript')
     return response
@@ -391,7 +370,7 @@ class JsonError(Exception):
         self.data = kwargs
 
 
-class JsonRequest(Request):
+class FlaskJSONRequest(Request):
     """This class changes :class:`flask.Request` behaviour on JSON parse
     errors.
 
@@ -410,7 +389,7 @@ class JsonRequest(Request):
             if response is not None:
                 return response
 
-        # By default we raise json error with description.
+        # By default, we raise json error with description.
         # If there is no description config or it's text is empty then
         # raise without a description.
         desc = current_app.config.get('JSON_DECODE_ERROR_MESSAGE')
@@ -420,99 +399,12 @@ class JsonRequest(Request):
             raise JsonError()
 
 
-class JSONEncoderEx(json.JSONEncoder):
-    """Extends default Flask JSON encoder with more types:
-
-    * iterable;
-    * :class:`~datetime.datetime`;
-    * :class:`~datetime.date`;
-    * :class:`~datetime.time`;
-    * `speaklater <https://pypi.python.org/pypi/speaklater>`_ lazy strings;
-    * objects with ``__json__()`` or ``for_json()`` methods.
-
-    Time related values will be converted to ISO 8601 format by default.
-
-    See Also:
-        :ref:`JSON_DATETIME_FORMAT <opt_fmt_datetime>`,
-        :ref:`JSON_DATE_FORMAT <opt_fmt_date>`,
-        :ref:`JSON_TIME_FORMAT <opt_fmt_time>`,
-        :ref:`JSON_USE_ENCODE_METHODS <opt_use_enc_methods>`.
-    """
-    def default(self, o):
-        # We have to test _LazyString before Iterable to prevent
-        # converting string to list of chars, since string is iterable too.
-        if _LazyString is not None and isinstance(o, _LazyString):
-            return text_type(o)
-        elif isinstance(o, collections_abc.Iterable):
-            # All iterables will be converted to list.
-            return list(o)
-        elif isinstance(o, datetime):
-            fmt = current_app.config.get('JSON_DATETIME_FORMAT')
-            return o.strftime(fmt) if fmt else o.isoformat()
-        elif isinstance(o, date):
-            fmt = current_app.config.get('JSON_DATE_FORMAT')
-            return o.strftime(fmt) if fmt else o.isoformat()
-        elif isinstance(o, time):
-            fmt = current_app.config.get('JSON_TIME_FORMAT')
-            return o.strftime(fmt) if fmt else o.isoformat()
-        elif current_app.config.get('JSON_USE_ENCODE_METHODS'):
-            if hasattr(o, '__json__'):
-                return o.__json__()
-            elif hasattr(o, 'for_json'):
-                return o.for_json()
-        return super(JSONEncoderEx, self).default(o)
-
-
-class JsonTestResponse(Response):
-    """JSON Response class for testing.
-
-    It provides convenient access to JSON content without explicit response
-    data decoding.
-
-    Flask-JSON replaces Flask's response class with this one
-    on initialization if testing mode enabled.
-
-    Usage:
-
-    .. code-block:: py
-
-        app = Flask()
-        app.config['TESTING'] = True
-        FlaskJSON(app)
-        ...
-        client = app.test_client()
-        r = client.get('/view')  # suppose it returns json_response(param='12)
-        assert r.json['param'] == 12
-
-    If you enable testing after Flask-JSON initialization the you have to
-    set :class:`.JsonTestResponse` by yourself:
-
-    .. code-block:: py
-
-        app = Flask()
-        FlaskJSON(app)
-        app.config['TESTING'] = True
-        app.response_class = JsonTestResponse
-
-    """
-    _json_cache = None
-
-    @property
-    def json(self):
-        """Response JSON content."""
-        if self._json_cache is None:
-            assert self.mimetype == 'application/json'
-            self._json_cache = json.loads(self.data)
-        return self._json_cache
-
-
 class FlaskJSON(object):
     """Flask-JSON extension class."""
-    def __init__(self, app=None):
-        self._app = app
+    def __init__(self, app: Flask = None):
         self._error_handler_func = None
         self._decoder_error_func = None
-        self._encoder_class = JSONEncoderEx
+        self._encoders = [_encoder, DefaultJSONProvider.default]
         if app is not None:
             self.init_app(app)
 
@@ -521,7 +413,7 @@ class FlaskJSON(object):
             return self._error_handler_func(e)
         return json_response(e.status, e.headers, **e.data)
 
-    def init_app(self, app):
+    def init_app(self, app: Flask):
         """Initializes the application with the extension.
 
         Args:
@@ -538,20 +430,15 @@ class FlaskJSON(object):
         app.config.setdefault('JSON_JSONP_QUERY_CALLBACKS',
                               ['callback', 'jsonp'])
 
-        if not hasattr(app, 'extensions'):
-            app.extensions = dict()
         app.extensions['json'] = self
 
-        self._app = app
-        app.request_class = JsonRequest
-        app.json_encoder = self._encoder_class
+        app.json_provider_class = FlaskJSONProvider
+        app.json = FlaskJSONProvider(app)
+        app.request_class = FlaskJSONRequest
         app.errorhandler(JsonError)(self._error_handler)
 
         if jsonify_errors:
             self._jsonify_http_errors(app)
-
-        if app.testing:
-            app.response_class = JsonTestResponse
 
     def _jsonify_http_errors(self, app):
         """Force HTTP errors returned as JSON instead of default HTML."""
@@ -626,7 +513,7 @@ class FlaskJSON(object):
                 def invalid_json_error(e):
                     raise SomeException
 
-        By default JSON response will be generated with HTTP 400::
+        By default, JSON response will be generated with HTTP 400::
 
             {"status": 400, "description": "Not a JSON."}
 
@@ -640,8 +527,7 @@ class FlaskJSON(object):
         return func
 
     def encoder(self, func):
-        """This decorator allows to set extra JSON encoding step on response
-        building.
+        """Add extra JSON encoding step on response building.
 
         JSON encoding order:
 
@@ -652,7 +538,7 @@ class FlaskJSON(object):
         If user defined encoder returns None then default encoders takes place
         (Flask-JSON and then Flask).
 
-        Example:
+        Examples:
 
             ::
 
@@ -663,15 +549,74 @@ class FlaskJSON(object):
                 def custom_encoder(o):
                     if isinstance(o, MyClass):
                         return o.to_string()
+
         """
-        class JSONEncoderWithHook(JSONEncoderEx):
-            def default(self, o):
-                result = func(o)
-                if result is not None:
-                    return result
-                return JSONEncoderEx.default(self, o)
-        if self._app is not None:
-            self._app.json_encoder = JSONEncoderWithHook
-        else:
-            self._encoder_class = JSONEncoderWithHook
+        self._encoders.insert(0, func)
         return func
+
+
+def _encoder(o):
+    # We have to test _LazyString before Iterable to prevent
+    # converting string to list of chars, since string is iterable too.
+    if _LazyString is not None and isinstance(o, _LazyString):
+        return str(o)
+    elif isinstance(o, Iterable):
+        # All iterables will be converted to list.
+        return list(o)
+    elif isinstance(o, datetime):
+        fmt = current_app.config.get('JSON_DATETIME_FORMAT')
+        if fmt == 'iso':
+            return o.isoformat()
+        elif fmt:
+            return o.strftime(fmt)
+    elif isinstance(o, date):
+        fmt = current_app.config.get('JSON_DATE_FORMAT')
+        if fmt == 'iso':
+            return o.isoformat()
+        elif fmt:
+            return o.strftime(fmt)
+    elif isinstance(o, time):
+        fmt = current_app.config.get('JSON_TIME_FORMAT')
+        return o.strftime(fmt) if fmt else o.isoformat()
+    elif current_app.config.get('JSON_USE_ENCODE_METHODS'):
+        try:
+            m = o.__json__
+        except AttributeError:
+            try:
+                m = o.for_json
+            except AttributeError:
+                return
+        return m()
+
+
+class FlaskJSONProvider(DefaultJSONProvider):
+    """Extends default Flask JSON provider with more types.
+
+    * iterable;
+    * :class:`~datetime.datetime`;
+    * :class:`~datetime.date`;
+    * :class:`~datetime.time`;
+    * `speaklater <https://pypi.python.org/pypi/speaklater>`_ lazy strings;
+    * objects with ``__json__()`` or ``for_json()`` methods.
+
+    Time related values will be converted to ISO 8601 format by default.
+
+    See Also:
+        :ref:`JSON_DATETIME_FORMAT <opt_fmt_datetime>`,
+        :ref:`JSON_DATE_FORMAT <opt_fmt_date>`,
+        :ref:`JSON_TIME_FORMAT <opt_fmt_time>`,
+        :ref:`JSON_USE_ENCODE_METHODS <opt_use_enc_methods>`.
+    """
+
+    @staticmethod
+    def default(o):
+        for func in current_app.extensions['json']._encoders:
+            val = func(o)
+            if val is not None:
+                return val
+        # NOTE: flask's converter raises an error, so this line is unreachable.
+        raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")  # pragma: no cover
+
+    def _prepare_response_obj(self, args, kwargs):
+        obj = super(FlaskJSONProvider, self)._prepare_response_obj(args, kwargs)
+        return obj if obj is not None else {}

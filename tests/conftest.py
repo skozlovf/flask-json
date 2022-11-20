@@ -38,7 +38,7 @@ class FlaskClient(_FlaskClient):
         return self.post(url, headers=headers, data=content)
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def app():
     """This pytest fixture setups flask application
     and initializes Flask-JSON.
@@ -63,7 +63,7 @@ def client(app):
     return app.test_client()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def app_request(app):
     """This pytest fixture setups Flask application test request context.
 

@@ -3,12 +3,7 @@ This module provides tests for @as_json() decorator.
 """
 import pytest
 from flask import Response
-from flask_json import (
-    json_response,
-    _normalize_view_tuple,
-    as_json,
-    JsonTestResponse
-)
+from flask_json import json_response, _normalize_view_tuple, as_json
 
 
 @pytest.mark.usefixtures('app_request')
@@ -76,7 +71,6 @@ class TestAsJson(object):
         assert view1.__name__ == 'view1'
 
         r = view1()
-        assert isinstance(r, JsonTestResponse)
         assert r.status_code == 200
         assert r.json == {'status': 200, 'value': 1}
 
@@ -244,6 +238,18 @@ class TestAsJson(object):
         r = view1()
         assert r.status_code == 200
         assert r.json == [1, '2']
+
+    # Test: return array
+    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
+                        reason="requires flask >= 0.11")
+    def test_non_dict_empty_array(self):
+        @as_json
+        def view1():
+            return []
+
+        r = view1()
+        assert r.status_code == 200
+        assert r.json == []
 
     # Test: return array with status
     @pytest.mark.skipif(pytest.flask_ver < (0, 11),

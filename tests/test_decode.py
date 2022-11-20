@@ -7,7 +7,7 @@ from flask import request
 from flask_json import json_response
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def theapp(app):
     @app.route('/test', methods=['POST'])
     def endpoint():
