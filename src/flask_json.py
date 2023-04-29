@@ -90,28 +90,30 @@ def json_response(status_=200, headers_=None, add_status_=None, data_=None,
     Returns:
         flask.Response: Response with the JSON content.
 
-    Note:
-        Only ``data_`` or ``kwargs`` is allowed.
+    Notes:
+        If both ``data_`` and ``kwargs`` are passed then ``data_`` should be a
+        :class:`dict` (``kwargs`` will be merged into ``data_``).
 
         If ``data_`` is not a :class:`dict` then ``add_status_`` and
         :ref:`JSON_ADD_STATUS <opt_add_status>` are ignored and no status
         is stored in the result JSON.
 
-        If :class:`dict` is passed via ``data_`` then behaviour is like you
-        pass data in the keyword arguments.
+        Doesn't work for numeric keys, ``add_status_=True`` and
+        ``app.json.sort_keys=True``.
 
     .. versionchanged:: 0.3.2
        Added ``data_`` and non-dictionary values support.
     """
-    assert data_ is None or not kwargs
+    if data_ is None:
+        data_ = kwargs
+    elif isinstance(data_, dict):
+        if kwargs:
+            data_.update(kwargs)
+    else:
+        assert not kwargs
+        add_status_ = False
 
-    if isinstance(data_, dict):
-        kwargs = data_
-        data_ = None
-
-    if data_ is not None:
-        add_status = False
-    elif add_status_ is not None:
+    if add_status_ is not None:
         add_status = add_status_
     else:
         add_status = current_app.config['JSON_ADD_STATUS']
@@ -119,9 +121,9 @@ def json_response(status_=200, headers_=None, add_status_=None, data_=None,
     if add_status:
         field = current_app.config['JSON_STATUS_FIELD_NAME']
         if field not in kwargs:
-            kwargs[field] = status_
+            data_[field] = status_
 
-    response = jsonify(data_) if data_ is not None else jsonify(**kwargs)
+    response = jsonify(data_)
     response.status_code = status_
 
     if headers_ is not None:
