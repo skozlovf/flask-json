@@ -9,7 +9,7 @@ def read(name, only_open=False):
 
 
 ext_version = None
-with read('flask_json.py', only_open=True) as f:
+with read('src/flask_json.py', only_open=True) as f:
     for line in f:
         if line.startswith('__version__'):
             ext_version,  = re.findall(r"__version__\W*=\W*'([^']+)'", line)
@@ -25,6 +25,7 @@ setup(
     author_email='skozlovf@gmail.com',
     description='Better JSON support for Flask',
     long_description=read('README.rst'),
+    package_dir = {"": "src"},
     py_modules=['flask_json'],
     zip_safe=False,
     include_package_data=True,
