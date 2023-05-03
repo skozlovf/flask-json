@@ -84,9 +84,13 @@ class TestResponse(object):
         assert r.headers.get('X-HEADER', type=int) == 42
 
     # Test: if both data_ and kwargs are set.
-    @pytest.mark.skipif(pytest.flask_ver < (0, 11),
-                        reason="requires flask >= 0.11")
     def test_params_both(self):
+        r = json_response(data_={'x': 'y'}, val=1)
+        assert r.status_code == 200
+        assert r.json == {'status': 200, 'x': 'y', 'val': 1}
+
+    # Test: if both data_ and kwargs are set but data_ is not a dict.
+    def test_params_both_non_dict(self):
         with pytest.raises(AssertionError):
             json_response(data_=1, val=1)
 

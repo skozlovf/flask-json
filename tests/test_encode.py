@@ -10,6 +10,18 @@ from flask_json import json_response
 
 @pytest.mark.usefixtures('app_request')
 class TestEncode(object):
+    # Test: encode dict.
+    def test_dict(self):
+        r = json_response(data_={'one': 'two', 'three': 'four'})
+        assert r.status_code, 200
+        assert r.json == {'status': 200, 'one': 'two', 'three': 'four'}
+
+    # Test: encode dict with numeric keys.
+    def test_dict_num_keys(self):
+        r = json_response(data_={1: 2, 3: 4}, add_status_=False)
+        assert r.status_code, 200
+        assert r.json == {'1': 2, '3': 4}
+
     # Test: encode lazy string.
     def test_lazystring(self):
         speaklater = pytest.importorskip("speaklater")
