@@ -98,7 +98,7 @@ def json_response(status_=200, headers_=None, add_status_=None, data_=None,
         :ref:`JSON_ADD_STATUS <opt_add_status>` are ignored and no status
         is stored in the result JSON.
 
-        Doesn't work for numeric keys, ``add_status_=True`` and
+        Doesn't work for numeric keys if ``add_status_=True`` and
         ``app.json.sort_keys=True``.
 
     .. versionchanged:: 0.3.2
