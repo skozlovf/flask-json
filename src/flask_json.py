@@ -18,7 +18,7 @@ from werkzeug.exceptions import default_exceptions, BadRequest, HTTPException
 from flask import current_app, jsonify, request, Request, Response, Flask
 from flask.json.provider import DefaultJSONProvider
 
-__version__ = '0.3.5'
+__version__ = '0.4.0'
 
 
 def json_response(status_=200, headers_=None, add_status_=None, data_=None,
