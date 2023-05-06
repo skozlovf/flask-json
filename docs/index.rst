@@ -14,6 +14,9 @@ It helps to handle JSON-based requests and provides the following features:
 * Extended JSON encoding support (see :ref:`encoding`).
 * :ref:`JSONP support <jsonp>` with :func:`@as_json_p <flask_json.as_json_p>`.
 
+.. toctree::
+   :maxdepth: 2
+
 .. contents::
     :local:
     :backlinks: none
@@ -33,7 +36,7 @@ or::
 Initialization
 ==============
 
-Before using Flask-JSON features you have to create
+Before using Flask-JSON features you need to create
 :class:`~flask_json.FlaskJSON` instance and initialize it with the Flask
 application instance. As with common Flask extension there are two ways.
 
@@ -447,20 +450,6 @@ configurations :ref:`JSON_JSONP_STRING_QUOTES <opt_jsonp_quotes>`,
 Also there is a possibility to set configuration for the specific view via
 decorator parameters.
 
-Testing
-=======
-
-Flask-JSON also may help in testing of your JSON API calls. It replaces
-Flask's :class:`~flask.Response` class with custom one if ``TESTING`` config
-flag is enabled.
-
-With Flask-JSON response class :class:`~flask_json.JsonTestResponse` you can
-use :attr:`~flask_json.JsonTestResponse.json` attribute.
-Here is example test project:
-
-.. literalinclude:: ../examples/example_test.py
-   :language: python
-
 .. _config:
 
 Configuration
@@ -592,27 +581,30 @@ This section describes Flask-JSON functions and classes.
 .. autoclass:: flask_json.FlaskJSON
     :members:
 
-.. autofunction:: flask_json.json_response
-
 .. autofunction:: flask_json.as_json
 
 .. autofunction:: flask_json.as_json_p
+
+.. autofunction:: flask_json.json_response
+
+.. autoclass:: flask_json.FlaskJSONProvider
+    :members:
 
 .. autoclass:: flask_json.JsonError
     :members:
     :special-members: __init__
 
-.. autoclass:: flask_json.JsonTestResponse
-    :members:
-    :special-members: __init__
-
-Low-Level API
--------------
-
-.. autoclass:: flask_json.JsonRequest
-    :members:
-
-.. autoclass:: flask_json.JSONEncoderEx
-    :members:
+.. .. autoclass:: flask_json.JsonTestResponse
+..     :members:
+..     :special-members: __init__
+..
+.. Low-Level API
+.. -------------
+..
+.. .. autoclass:: flask_json.JsonRequest
+..     :members:
+..
+.. .. autoclass:: flask_json.JSONEncoderEx
+..     :members:
 
 .. include:: ../CHANGES

@@ -1,5 +1,23 @@
-Flask-JSON Changelog
-====================
+Changelog
+=========
+
+0.4.0
+-----
+
+This release is not fully backwards compatible with the 0.3.5 version.
+
+* Drop Flask versions older than ``2.2.0``.
+* Use the new JSON provider interface introduced in the
+  `Flask 2.2.0 <https://github.com/pallets/flask/pull/4692>`_
+  (`#10 <https://github.com/skozlovf/flask-json/issues/10>`_,
+  `#12 <https://github.com/skozlovf/flask-json/issues/12>`_).
+* Add numeric keys support (`#11 <https://github.com/skozlovf/flask-json/issues/11>`_).
+* Allow specifying both ``data_`` and ``kwargs`` in the ``json_response()``.
+
+Incompatible changes:
+
+* Remove ``JsonTestResponse``, ``flask.Response.json`` provides the same feature.
+
 
 0.3.5
 -----
